@@ -1,0 +1,21 @@
+category,word,example_sentence,phonetic
+Dolch,the,The cat sat on the mat.,ðə
+Dolch,and,I like apples and bananas.,ænd
+Dolch,you,You are my friend.,juː
+Dolch,said,She said hello.,sɛd
+Dolch,come,Come here please.,kʌm
+Phonics,cat,The cat is sleeping.,kæt
+Phonics,ship,The ship sails fast.,ʃɪp
+Phonics,cake,I baked a cake.,keɪk
+Phonics,moon,The moon is bright.,muːn
+Phonics,chair,He sat on the chair.,tʃɛr
+MinimalPair,bat,The bat flew away.,bæt
+MinimalPair,pat,Please pat the dog.,pæt
+MinimalPair,fan,Turn on the fan.,fæn
+MinimalPair,van,The van is red.,væn
+MinimalPair,see,I can see you.,siː
+MinimalPair,she,She is smiling.,ʃiː
+MinimalPair,lock,Turn the lock.,lɒk
+MinimalPair,rock,He threw a rock.,rɒk
+Phonics,shop,I went to the shop.,ʃɒp
+Dolch,play,We play outside.,pleɪ
