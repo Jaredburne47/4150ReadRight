@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
+import 'screens/login_screen.dart';
+import 'screens/student_home.dart';
+import 'screens/teacher_dashboard_screen.dart';
 
+//Main
 
-void main() => runApp(const ReadRightApp());
+void main() {
+  runApp(const ReadingApp());
+}
 
-class ReadRightApp extends StatelessWidget {
-  const ReadRightApp({super.key});
+class ReadingApp extends StatelessWidget {
+  const ReadingApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ReadRight Prototype'
-      debugShowCheckedModeBanner: false,
+      title: 'Reading Practice App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      //this connects to a function that will be made in probably a login_screen file
-      home: const LoginScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const LoginScreen(),
+        '/studentHome': (context) => const StudentHome(),
+        '/teacherDashboard': (context) => const TeacherDashboardScreen(),
+      },
     );
-
   }
-
 }
