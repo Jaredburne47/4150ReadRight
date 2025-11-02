@@ -1,0 +1,61 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
+firebase-debug.*.log*
+
+# Firebase cache
+.firebase/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Environment files
+.env
+
+# Flutter build/cache
+build/
+.dart_tool/
+.gradle/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# Flutter intermediate build artifacts
+**/android/local.properties
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+
+# Output files
+*.apk
+*.aab
+*.ipa
+*.dill
+*.so
+
+# IntelliJ / VSCode
+.idea/
+.vscode/
+
+# Misc
+*.iml
+*.lock
+*.DS_Store

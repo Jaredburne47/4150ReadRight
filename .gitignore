@@ -1,0 +1,8 @@
+
+# Flutter build/cache
+readright_app/build/
+readright_app/.dart_tool/
+readright_app/.gradle/
+*.apk
+*.aab
+
