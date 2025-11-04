@@ -1,21 +1,21 @@
-category,word,example_sentence,phonetic
-Dolch,the,The cat sat on the mat.,thuh
-Dolch,and,I like apples and bananas.,and
-Dolch,you,You are my friend.,yoo
-Dolch,said,She said hello.,sed
-Dolch,come,Come here please.,kum
-Phonics,cat,The cat is sleeping.,kat
-Phonics,ship,The ship sails fast.,ship
-Phonics,cake,I baked a cake.,kayk
-Phonics,moon,The moon is bright.,moon
-Phonics,chair,He sat on the chair.,chair
-MinimalPair,bat,The bat flew away.,bat
-MinimalPair,pat,Please pat the dog.,pat
-MinimalPair,fan,Turn on the fan.,fan
-MinimalPair,van,The van is red.,van
-MinimalPair,see,I can see you.,see
-MinimalPair,she,She is smiling.,shee
-MinimalPair,lock,Turn the lock.,lok
-MinimalPair,rock,He threw a rock.,rok
-Phonics,shop,I went to the shop.,shop
-Dolch,play,We play outside.,play
+category,word,example_sentence_1,example_sentence_2,example_sentence_3,phonetic
+Dolch,the,The cat sat on the mat.,The dog chased the ball.,The bird is in the tree.,thuh
+Dolch,and,I like apples and bananas.,Mom and Dad are cooking.,She ran fast and smiled.,and
+Dolch,you,You are my friend.,Can you help me?,Do you like to play?,yoo
+Dolch,said,She said hello.,Mom said it’s time to eat.,He said thank you to me.,sed
+Dolch,come,Come here please.,Can you come to my house?,Come play with us.,kum
+Dolch,play,We play outside.,Let’s play a game.,I will play with my toys.,play
+Phonics,cat,The cat is sleeping.,A black cat ran fast.,The cat jumped on the bed.,kat
+Phonics,ship,The ship sails fast.,A ship travels on the sea.,The ship is very big.,ship
+Phonics,cake,I baked a cake.,She ate a chocolate cake.,The cake smells sweet.,kayk
+Phonics,moon,The moon is bright.,We saw the full moon.,The moon lights up the night.,moon
+Phonics,chair,He sat on the chair.,The chair is made of wood.,This chair is very soft.,chair
+Phonics,shop,I went to the shop.,The shop sells books.,Dad is at the shop now.,shop
+MinimalPair,bat,The bat flew away.,He hit the ball with a bat.,A bat sleeps in a cave.,bat
+MinimalPair,pat,Please pat the dog.,She gave the cat a pat.,I will pat your head.,pat
+MinimalPair,fan,Turn on the fan.,The fan is spinning fast.,This fan keeps me cool.,fan
+MinimalPair,van,The van is red.,They rode in the van.,A big van drove down the road.,van
+MinimalPair,see,I can see you.,Can you see the stars?,I see my friends at school.,see
+MinimalPair,she,She is smiling.,She ran to class.,She has a red dress.,shee
+MinimalPair,lock,Turn the lock.,The door has a lock.,He lost the key to the lock.,lok
+MinimalPair,rock,He threw a rock.,A rock rolled down the hill.,We found a shiny rock.,rok
