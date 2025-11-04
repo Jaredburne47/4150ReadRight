@@ -22,7 +22,7 @@ class _StudentHomeState extends State<StudentHome> {
   final List<Widget> _screens = const [
     WordListScreen(),
     PracticeScreen(),
-    FeedbackScreen(),
+    _FeedbackTabPlaceholder(),
     ProgressScreen(),
   ];
 
@@ -72,3 +72,34 @@ class _StudentHomeState extends State<StudentHome> {
     );
   }
 }
+
+class _FeedbackTabPlaceholder extends StatelessWidget {
+  const _FeedbackTabPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.feedback_outlined, size: 48, color: Colors.blueGrey),
+            SizedBox(height: 12),
+            Text(
+              'Feedback',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'After you record a word on the Practice tab,\nyour feedback will appear automatically here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black54),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
