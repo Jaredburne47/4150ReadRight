@@ -1,77 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 
-// Static UI placeholder for feedback screen.
-// Shows example pronunciation score, suggestions, and transcript area.
+class FeedbackPlaceholder extends StatefulWidget {
+  final String word;
+  final String recognized;
+  final double score;
+  final String audioPath;
 
-class FeedbackPlaceholder extends StatelessWidget {
-  const FeedbackPlaceholder({super.key});
+  const FeedbackPlaceholder({
+    super.key,
+    required this.word,
+    required this.recognized,
+    required this.score,
+    required this.audioPath,
+  });
+
+  @override
+  State<FeedbackPlaceholder> createState() => _FeedbackPlaceholderState();
+}
+
+class _FeedbackPlaceholderState extends State<FeedbackPlaceholder> {
+  final FlutterSoundPlayer _player = FlutterSoundPlayer();
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player.openPlayer();
+  }
+
+  @override
+  void dispose() {
+    _player.closePlayer();
+    super.dispose();
+  }
+
+  Future<void> _togglePlay() async {
+    if (_isPlaying) {
+      await _player.stopPlayer();
+      setState(() => _isPlaying = false);
+    } else {
+      await _player.startPlayer(fromURI: widget.audioPath);
+      setState(() => _isPlaying = true);
+      _player.onProgress!.listen((_) {
+        if (!_player.isPlaying) setState(() => _isPlaying = false);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Feedback (Static Placeholder)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Overall score', style: TextStyle(fontSize: 16, color: Colors.black54)),
-                  SizedBox(height: 8),
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.blueAccent,
-                    child: Text('82%', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          const Text('Transcript', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('Feedback for "${widget.word}"',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          Text('Recognized: "${widget.recognized}"',
+              style: const TextStyle(fontSize: 18)),
           const SizedBox(height: 8),
-          Container(
-            height: 100,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text('"Example recognized text goes here..."', style: TextStyle(color: Colors.black87)),
+          Text('Score: ${(widget.score * 100).toStringAsFixed(1)}%',
+              style: const TextStyle(fontSize: 18, color: Colors.black54)),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _togglePlay,
+            icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
+            label: Text(_isPlaying ? 'Stop Audio' : 'Play Audio'),
           ),
-
-          const SizedBox(height: 12),
-
-          const Text('Suggestions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-
-          const ListTile(
-            leading: Icon(Icons.check_circle_outline, color: Colors.green),
-            title: Text('Good pronunciation of vowel sounds'),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('Back to Practice'),
           ),
-          const ListTile(
-            leading: Icon(Icons.warning_amber_outlined, color: Colors.orange),
-            title: Text('Work on the ending consonant in "cat"'),
-          ),
-
-          const SizedBox(height: 14),
-          ElevatedButton(
-            onPressed: null, // static placeholder
-            child: const Text('View full report (disabled in placeholder)'),
-          ),
-
-          const SizedBox(height: 10),
         ],
       ),
     );
   }
 }
-
