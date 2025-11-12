@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Models & Services
 import 'models/enums.dart';
@@ -69,4 +70,5 @@ class ReadRightApp extends StatelessWidget {
       home: home,
     );
   }
+
 }
