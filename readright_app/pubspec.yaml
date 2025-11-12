@@ -37,7 +37,7 @@ dependencies:
   speech_to_text: ^7.3.0
   flutter_sound: ^9.4.15
   permission_handler: ^12.0.1
-  flutter_dotenv: ^5.2.1
+  flutter_tts: ^3.8.5
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -67,6 +67,14 @@ flutter:
 
   assets:
     - lib/data/seed_words.csv
+    - lib/data/dolch_prek.csv
+    - lib/data/dolch_kindergarten.csv
+    - lib/data/dolch_1st.csv
+    - lib/data/dolch_3rd.csv
+    - lib/data/dolch_2nd.csv
+    - lib/data/dolch_nouns.csv
+    - lib/data/test1.csv
+    - lib/data/test2.csv
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -93,4 +101,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-
