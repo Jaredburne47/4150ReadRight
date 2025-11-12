@@ -1,68 +1,62 @@
+// lib/services/storage_service.dart
+//
+// Handles local storage of student progress.
+// Uses SharedPreferences to store mastered words and list index.
+
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// A model representing a student's practice attempt.
-class PracticeAttempt {
-  final String word;
-  final String recognized;
-  final double score;
-  final DateTime timestamp;
+class LocalProgressService {
+  static const String _keyMasteredWords = 'mastered_words';
+  static const String _keyCurrentList = 'current_list_index';
 
-  PracticeAttempt({
-    required this.word,
-    required this.recognized,
-    required this.score,
-    required this.timestamp,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'word': word,
-    'recognized': recognized,
-    'score': score,
-    'timestamp': timestamp.toIso8601String(),
-  };
-
-  factory PracticeAttempt.fromJson(Map<String, dynamic> json) {
-    return PracticeAttempt(
-      word: json['word'] ?? '',
-      recognized: json['recognized'] ?? '',
-      score: (json['score'] ?? 0.0).toDouble(),
-      timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
-    );
-  }
-}
-
-/// Handles saving and retrieving practice attempts using SharedPreferences.
-class StorageService {
-  static const _key = 'practice_attempts';
-
-  /// Save a new practice attempt (appends to existing list)
-  static Future<void> saveAttempt(PracticeAttempt attempt) async {
+  Future<Set<String>> _loadMasteredSet() async {
     final prefs = await SharedPreferences.getInstance();
-    final existing = prefs.getStringList(_key) ?? [];
-
-    existing.add(jsonEncode(attempt.toJson()));
-
-    // Keep only the most recent 20 attempts (to avoid bloat)
-    if (existing.length > 20) {
-      existing.removeRange(0, existing.length - 20);
-    }
-
-    await prefs.setStringList(_key, existing);
+    final jsonString = prefs.getString(_keyMasteredWords);
+    if (jsonString == null) return {};
+    final list = List<String>.from(jsonDecode(jsonString));
+    return list.toSet();
   }
 
-  /// Retrieve all stored attempts (most recent last)
-  static Future<List<PracticeAttempt>> getAttempts() async {
+  Future<void> _saveMasteredSet(Set<String> mastered) async {
     final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getStringList(_key) ?? [];
-    return data
-        .map((e) => PracticeAttempt.fromJson(jsonDecode(e)))
-        .toList(growable: false);
+    final jsonString = jsonEncode(mastered.toList());
+    await prefs.setString(_keyMasteredWords, jsonString);
   }
 
-  /// Clear all stored attempts (for testing or reset)
-  static Future<void> clear() async {
+  /// Returns true if this word is already mastered
+  Future<bool> isWordMastered(String word) async {
+    final mastered = await _loadMasteredSet();
+    return mastered.contains(word.toLowerCase());
+  }
+
+  /// Marks a word as mastered
+  Future<void> markWordMastered(String word) async {
+    final mastered = await _loadMasteredSet();
+    mastered.add(word.toLowerCase());
+    await _saveMasteredSet(mastered);
+  }
+
+  /// Returns all mastered words
+  Future<List<String>> getAllMasteredWords() async {
+    final mastered = await _loadMasteredSet();
+    return mastered.toList();
+  }
+
+  /// Clears all mastered words (used when advancing to a new list)
+  Future<void> clearMasteredWords() async {
+    await _saveMasteredSet({});
+  }
+
+  /// Gets the index of the current word list
+  Future<int> getCurrentListIndex() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_key);
+    return prefs.getInt(_keyCurrentList) ?? 0;
+  }
+
+  /// Sets the index of the current word list
+  Future<void> setCurrentListIndex(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keyCurrentList, index);
   }
 }
