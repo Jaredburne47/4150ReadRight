@@ -76,6 +76,7 @@ flutter:
     - lib/data/dolch_nouns.csv
     - lib/data/test1.csv
     - lib/data/test2.csv
+    - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -102,4 +103,5 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
 
