@@ -15,6 +15,7 @@ import 'screens/teacher_dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
 
   // Initialize Firebase first
   await Firebase.initializeApp(
@@ -72,3 +73,4 @@ class ReadRightApp extends StatelessWidget {
   }
 
 }
+
