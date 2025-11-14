@@ -5,29 +5,18 @@
 // (e.g., a local fallback and a cloud-based service).
 
 import 'dart:typed_data';
-
-// TODO: CLOUD STT TEAM - Step 2
-// Create a new class in a separate file (e.g., 'azure_assessor.dart') that
-// implements this 'PronunciationAssessor' interface. Your new class will connect
-// to the cloud service and return a real score and feedback.
-
-/// Represents the result from a pronunciation assessment provider.
-class AssessmentResult {
-  final int score; // A score from 0 to 100.
-  final String feedback; // A descriptive feedback message.
-
-  AssessmentResult({required this.score, required this.feedback});
-}
+import '../models/assessment_result.dart';
 
 /// Abstract class (interface) for any pronunciation assessment provider.
-/// All providers, whether local or cloud-based, must implement this class.
+///
+/// Implementations should take:
+///  - referenceText: the expected passage/word the student is reading
+///  - audioBytes: a 16-bit WAV buffer (e.g., from SpeechService.recordAudio())
+///  - locale: BCP-47 language tag like "en-US"
+///
+/// and return an AssessmentResult with accuracy/fluency/completeness and
+/// per-word scores filled in as best they can.
 abstract class PronunciationAssessor {
-  /// Assesses the pronunciation of spoken audio against a reference text.
-  ///
-  /// [referenceText] is the word the student was supposed to say.
-  /// [audioBytes] is the raw audio data from the microphone.
-  ///
-  /// Returns an [AssessmentResult] containing the score and feedback.
   Future<AssessmentResult> assess({
     required String referenceText,
     required Uint8List audioBytes,
@@ -35,9 +24,10 @@ abstract class PronunciationAssessor {
   });
 }
 
-// TODO: CLOUD STT TEAM - Step 3
-// As a starting point, you can create a mock implementation for testing.
-// This will allow you to work on the UI integration without needing a live cloud connection.
+/// Simple mock assessor for offline testing / development.
+///
+/// This does NOT call any cloud service. It just generates a fake score
+/// based on the length of the reference text so the UI can be exercised.
 class MockPronunciationAssessor implements PronunciationAssessor {
   @override
   Future<AssessmentResult> assess({
@@ -45,15 +35,31 @@ class MockPronunciationAssessor implements PronunciationAssessor {
     required Uint8List audioBytes,
     String locale = 'en-US',
   }) async {
-    // Simulate a network delay
+    // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 750));
 
-    // For testing, return a mock score based on the word length.
-    final mockScore = (referenceText.length * 10) % 100;
-    
+    // Very simple fake score: 0–100 based on text length
+    final mockScore = ((referenceText.length * 7) % 101).toDouble();
+
+    // Use the same value for all three high-level metrics
+    final accuracy = mockScore;
+    final fluency = mockScore;
+    final completeness = mockScore;
+
+    // Optionally assign the same score to each word
+    final perWordAccuracy = <String, double>{};
+    for (final word in referenceText.split(RegExp(r'\s+'))) {
+      if (word.trim().isEmpty) continue;
+      perWordAccuracy[word] = mockScore;
+    }
+
     return AssessmentResult(
-      score: mockScore,
-      feedback: 'Mock feedback for "$referenceText". Score: $mockScore%',
+      accuracy: accuracy,
+      fluency: fluency,
+      completeness: completeness,
+      perWordAccuracy: perWordAccuracy,
+      provider: 'mock',
+      recognizedText: "",
     );
   }
 }

@@ -1,7 +1,6 @@
 // lib/services/local_progress_service.dart
 //
 // Handles all local storage for student progress.
-// This is the SINGLE SOURCE OF TRUTH for all student data.
 
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
