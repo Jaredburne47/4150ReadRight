@@ -1,5 +1,3 @@
-// lib/screens/practice_screen.dart
-
 import 'package:flutter/material.dart';
 
 import '../models/word_item.dart';
@@ -9,6 +7,9 @@ import '../services/speech_service.dart';
 import '../services/word_list_service.dart';
 import '../services/local_progress_service.dart';
 import '../services/cloud_assessment_service.dart';
+import '../widgets/mascot_widget.dart';
+import '../widgets/record_placeholder.dart';
+import '../widgets/star_burst.dart';
 
 class PracticeScreen extends StatefulWidget {
   const PracticeScreen({super.key});
@@ -18,6 +19,7 @@ class PracticeScreen extends StatefulWidget {
 }
 
 class _PracticeScreenState extends State<PracticeScreen> {
+  bool _showSuccess = false;
   late WordListService _wordListService;
   late SpeechService _speechService;
   late LocalProgressService _progressService;
@@ -39,7 +41,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   @override
   void dispose() {
-    _speechService.dispose();
+    try {
+      _speechService.dispose();
+    } catch (_) {}
     super.dispose();
   }
 
@@ -69,7 +73,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
   }
 
-  /// Reset progress for testing.
   Future<void> _resetProgress() async {
     await _progressService.setCurrentListIndex(0);
     await _progressService.clearMasteredWords();
@@ -89,8 +92,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void _skipWord() {
     if (_isRecording) return;
 
-    int nextIndex =
-    _wordList.indexWhere((w) => !w.mastered, _currentIndex + 1);
+    int nextIndex = _wordList.indexWhere((w) => !w.mastered, _currentIndex + 1);
 
     if (nextIndex == -1) {
       nextIndex = _wordList.indexWhere((w) => !w.mastered);
@@ -99,7 +101,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     setState(() {
       if (nextIndex != -1 && nextIndex != _currentIndex) {
         _currentIndex = nextIndex;
-        _feedback = 'Skipped.';
+        _feedback = 'Skipped! Try this word instead. 👍';
       } else {
         _feedback = 'This is the last word!';
       }
@@ -108,7 +110,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   Future<void> _completeList() async {
     setState(() {
-      _feedback = 'List complete! Loading next list...';
+      _feedback = '🎉 List complete! Loading next list...';
       _isLoading = true;
     });
 
@@ -117,9 +119,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
     await _loadWords();
   }
 
-  // ----------------------------------------------------------
-  // ⭐ NEW AZURE-POWERED PRACTICE LOGIC (merging your old UI)
-  // ----------------------------------------------------------
   Future<void> _startPractice() async {
     if (_isRecording) return;
 
@@ -130,17 +129,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
     final currentWord = _wordList[_currentIndex];
 
-    // 1️⃣ Record WAV audio using new SpeechService
     final wavBytes = await _speechService.recordAudio();
     if (wavBytes.isEmpty) {
       setState(() {
-        _feedback = 'Recording failed. Try again.';
+        _feedback = 'Recording failed. Try again! 🎤';
         _isRecording = false;
       });
       return;
     }
 
-    // 2️⃣ Score using Azure (or fallback)
     final assessment = await _cloud.scoreAttempt(
       expectedWord: currentWord.word,
       recognizedWord: '',
@@ -150,7 +147,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
     final score = assessment.score;
     final isCorrect = score >= 60;
 
-    // 3️⃣ Save attempt
     final attempt = AttemptRecord(
       word: currentWord.word,
       listName: currentWord.category,
@@ -159,31 +155,33 @@ class _PracticeScreenState extends State<PracticeScreen> {
     );
     await _progressService.saveAttempt(attempt);
 
-    // 4️⃣ UI Feedback (same styling you liked)
     if (isCorrect) {
       setState(() {
-        _feedback = 'Great job!';
+        _feedback = '🌟 Excellent job! Well done!';
         currentWord.mastered = true;
+        _showSuccess = true;
+      });
+
+      Future.delayed(const Duration(milliseconds: 900), () {
+        if (mounted) setState(() => _showSuccess = false);
       });
 
       await _progressService.markWordMastered(currentWord.word);
       await Future.delayed(const Duration(milliseconds: 300));
 
-      // 🔊 TTS
       await _speechService.speak([
-        'Great job!',
+        'Excellent job!',
         currentWord.word,
         currentWord.exampleSentence,
       ]);
 
       _findNextWord();
     } else {
-      setState(() => _feedback = 'Try again next time.');
+      setState(() => _feedback = 'Keep trying! You can do it! 💪');
       await Future.delayed(const Duration(milliseconds: 300));
 
-      // 🔊 TTS
       await _speechService.speak([
-        'Try again next time.',
+        'Keep trying! You can do it!',
         currentWord.word,
         currentWord.exampleSentence,
       ]);
@@ -200,33 +198,52 @@ class _PracticeScreenState extends State<PracticeScreen> {
       body = Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 20),
+            const MascotWidget(size: 100, animated: true),
+            const SizedBox(height: 24),
+            const CircularProgressIndicator(
+              strokeWidth: 6,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+            ),
+            const SizedBox(height: 16),
             if (_feedback.isNotEmpty)
-              Text(_feedback, style: const TextStyle(fontSize: 18)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  _feedback,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
           ],
         ),
       );
     } else if (_wordList.isEmpty) {
-      // All lists complete
       body = Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.celebration_rounded, size: 100, color: Colors.amber),
-              SizedBox(height: 24),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const MascotWidget(size: 120, animated: true),
+              const SizedBox(height: 24),
+              const Icon(Icons.celebration_rounded, size: 80, color: Colors.amber),
+              const SizedBox(height: 20),
               Text(
-                'Congratulations!',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                '🎉 Amazing Work! 🎉',
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  color: Colors.orange.shade700,
+                ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
-                'You have mastered all the word lists.',
-                style: TextStyle(fontSize: 18),
+                'You\'ve mastered all the words!\nYou\'re a reading superstar! ⭐',
+                style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -236,93 +253,134 @@ class _PracticeScreenState extends State<PracticeScreen> {
     } else {
       final currentWord = _wordList[_currentIndex];
 
-      body = Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 48.0, horizontal: 24.0),
-                  child: Text(
-                    currentWord.word,
-                    style: const TextStyle(
-                      fontSize: 52,
-                      fontWeight: FontWeight.bold,
+      body = SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 12),
+
+            // Word card - extra large and child-friendly
+            Card(
+              elevation: 8,
+              color: Colors.amber.shade50,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(color: Colors.orange.shade300, width: 3),
+              ),
+              child: Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxWidth: 400),
+                padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 24.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'Your word is:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 10),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        currentWord.word,
+                        style: TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange.shade800,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
 
-              // ⭐ Animated "Great job!" / "Try again"
-              AnimatedOpacity(
-                opacity: _feedback.isNotEmpty ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 400),
+            const SizedBox(height: 20),
+
+            // Feedback message with animation
+            AnimatedOpacity(
+              opacity: _feedback.isNotEmpty ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 400),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 400),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: _feedback.contains('Excellent') || _feedback.contains('🌟')
+                      ? Colors.green.shade100
+                      : _feedback.contains('Skipped')
+                          ? Colors.blue.shade100
+                          : Colors.orange.shade100,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _feedback.contains('Excellent') || _feedback.contains('🌟')
+                        ? Colors.green.shade300
+                        : _feedback.contains('Skipped')
+                            ? Colors.blue.shade300
+                            : Colors.orange.shade300,
+                    width: 2,
+                  ),
+                ),
                 child: Text(
                   _feedback,
                   style: TextStyle(
-                    fontSize: 26,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: _feedback.contains('Great')
-                        ? Colors.green.shade700
+                    color: _feedback.contains('Excellent') || _feedback.contains('🌟')
+                        ? Colors.green.shade800
                         : _feedback.contains('Skipped')
-                        ? Colors.blue.shade700
-                        : Colors.red.shade700,
+                            ? Colors.blue.shade800
+                            : Colors.orange.shade800,
                   ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+            ),
 
-              Column(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _isRecording ? null : _startPractice,
-                    icon: Icon(
-                        _isRecording ? Icons.pause_circle : Icons.mic,
-                        size: 32),
-                    label: Text(
-                      _isRecording ? 'Listening...' : 'Speak Now',
-                      style: const TextStyle(fontSize: 22),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(240, 70),
-                      backgroundColor:
-                      _isRecording ? Colors.grey : Colors.blueAccent,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(35)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _isRecording ? null : _skipWord,
-                    child:
-                    const Text('Skip Word', style: TextStyle(fontSize: 16)),
-                  ),
-                ],
+            const SizedBox(height: 20),
+
+            // Tiger recording button
+            RecordPlaceholder(
+              isRecording: _isRecording,
+              onTap: _startPractice,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Skip button - child-friendly
+            OutlinedButton.icon(
+              onPressed: _isRecording ? null : _skipWord,
+              icon: const Icon(Icons.skip_next, size: 24),
+              label: const Text('Skip This Word', style: TextStyle(fontSize: 16)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                side: BorderSide(color: Colors.orange.shade300, width: 2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+          ],
         ),
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Practice Session"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.restart_alt),
-            onPressed: _resetProgress,
-            tooltip: 'Reset All Progress',
+    return Stack(
+      children: [
+        body,
+        // Success animation overlay
+        if (_showSuccess)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: StarBurst(play: _showSuccess),
+            ),
           ),
-        ],
-      ),
-      body: body,
+      ],
     );
   }
 }

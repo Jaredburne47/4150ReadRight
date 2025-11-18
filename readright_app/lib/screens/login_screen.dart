@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/enums.dart';
 import '../services/auth_service.dart';
+import '../widgets/mascot_widget.dart';
 import 'student_home.dart';
 import 'teacher_dashboard_screen.dart';
 
@@ -43,7 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
         await auth.signup(email: email, password: password, role: _selectedRole);
       }
 
-      // 👇 Immediately navigate based on role (no refresh needed)
       if (context.mounted) {
         final role = auth.role;
         Navigator.of(context).pushAndRemoveUntil(
@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ? const TeacherDashboardScreen()
                 : const StudentHome(),
           ),
-              (_) => false,
+          (_) => false,
         );
       }
     } on FirebaseAuthException catch (e) {
@@ -67,86 +67,189 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final roleItems = [
-      DropdownMenuItem(
+      const DropdownMenuItem(
         value: UserRole.student,
-        child: const Text('Student'),
+        child: Text('Student'),
       ),
-      DropdownMenuItem(
+      const DropdownMenuItem(
         value: UserRole.teacher,
-        child: const Text('Teacher'),
+        child: Text('Teacher'),
       ),
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ReadRight Login')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.school, size: 80, color: Colors.indigo),
-              const SizedBox(height: 24),
-
-              // Email field
-              TextField(
-                controller: emailCtrl,
-                decoration: const InputDecoration(labelText: 'Email'),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.orange.shade100,
+              Colors.orange.shade50,
+              Colors.white,
+            ],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
               ),
-              const SizedBox(height: 12),
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Logo with tiger mascot
+                      const MascotWidget(size: 80, animated: true),
+                      const SizedBox(height: 16),
 
-              // Password field
-              TextField(
-                controller: passCtrl,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-              ),
-              const SizedBox(height: 12),
+                      Text(
+                        'ReadRight',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Practice Reading Together',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
-              // Role dropdown
-              DropdownButtonFormField<UserRole>(
-                value: _selectedRole,
-                items: roleItems,
-                onChanged: (role) => setState(() => _selectedRole = role!),
-                decoration: const InputDecoration(labelText: 'Role'),
-              ),
-              const SizedBox(height: 24),
+                      // Email field
+                      TextField(
+                        controller: emailCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: const Icon(Icons.email),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 12),
 
-              // Error message
-              if (_error != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
+                      // Password field
+                      TextField(
+                        controller: passCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Role dropdown
+                      DropdownButtonFormField<UserRole>(
+                        value: _selectedRole,
+                        items: roleItems,
+                        onChanged: (role) => setState(() => _selectedRole = role!),
+                        decoration: InputDecoration(
+                          labelText: 'I am a',
+                          prefixIcon: const Icon(Icons.person),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Error message
+                      if (_error != null)
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _error!,
+                                  style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      // Submit button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _loading ? null : () => _submit(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange.shade600,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _loading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  _isLogin ? 'Login' : 'Sign Up',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    inherit: true,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Toggle between login / signup
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _isLogin = !_isLogin;
+                            _error = null;
+                          });
+                        },
+                        child: Text(
+                          _isLogin
+                              ? 'Don\'t have an account? Sign Up'
+                              : 'Already have an account? Login',
+                          style: TextStyle(color: Colors.orange.shade700),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-
-              // Submit button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _loading ? null : () => _submit(context),
-                  child: _loading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(_isLogin ? 'Login' : 'Sign Up'),
-                ),
               ),
-              const SizedBox(height: 12),
-
-              // Toggle between login / signup
-              TextButton(
-                onPressed: () {
-                  setState(() => _isLogin = !_isLogin);
-                },
-                child: Text(
-                  _isLogin
-                      ? 'Create a new account'
-                      : 'Already have an account? Login',
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

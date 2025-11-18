@@ -1,176 +1,287 @@
 import 'package:flutter/material.dart';
 import '../services/cloud_assessment_service.dart';
 import '../models/assessment_result.dart';
+import '../widgets/mascot_widget.dart';
 
 class FeedbackScreen extends StatelessWidget {
   const FeedbackScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Get last scored result from CloudAssessmentService
     final cloud = CloudAssessmentService.instance;
     final AssessmentResult? result = cloud.lastResult;
     final String? word = cloud.lastWord;
 
-    // If no recording has been done yet → show placeholder
+    // If no recording has been done yet, show child-friendly placeholder
     if (result == null || word == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text("Feedback"),
-          centerTitle: true,
-        ),
-        body: const Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.chat_bubble_outline,
-                    size: 60, color: Colors.grey),
-                SizedBox(height: 16),
-                Text(
-                  "Feedback",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+        body: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - 100,
+            ),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const MascotWidget(size: 120, animated: true),
+                    const SizedBox(height: 20),
+                    Icon(Icons.emoji_events, size: 60, color: Colors.amber.shade600),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Great Job!",
+                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                        color: Colors.orange.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "After you practice a word,\nyour feedback will appear here! ⭐",
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 12),
-                Text(
-                  "After you record a word on the Practice tab,\nyour feedback will appear here.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
-                )
-              ],
+              ),
             ),
           ),
         ),
       );
     }
 
-    // Compute final score similar to PracticeScreen
-    final double score =
-        (result.accuracy * 0.6) +
-            (result.fluency * 0.2) +
-            (result.completeness * 0.2);
+    final double score = (result.accuracy * 0.6) +
+        (result.fluency * 0.2) +
+        (result.completeness * 0.2);
 
     Color scoreColor;
+    String scoreEmoji;
     if (score >= 80) {
       scoreColor = Colors.green;
+      scoreEmoji = '🌟';
     } else if (score >= 60) {
       scoreColor = Colors.orange;
+      scoreEmoji = '👍';
     } else {
       scoreColor = Colors.red;
+      scoreEmoji = '💪';
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Feedback"),
-        centerTitle: true,
-      ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Word attempted
-            Center(
-              child: Text(
-                word,
-                style: const TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
+            const SizedBox(height: 20),
+
+            // Tiger mascot celebrating
+            const MascotWidget(size: 120, animated: true),
+            const SizedBox(height: 20),
+
+            // Word attempted - big and bold to be seen easily
+            Card(
+              elevation: 6,
+              color: Colors.amber.shade50,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: Colors.orange.shade300, width: 2),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'You practiced:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      word,
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange.shade800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
 
-            // Recognized text from Azure
-            if (result.recognizedText.isNotEmpty) ...[
-              Text(
-                "You said:",
-                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-              ),
-              Text(
-                result.recognizedText,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
+            const SizedBox(height: 24),
 
-            // Score card
+            // Score card - child-friendly
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: scoreColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  colors: [
+                    Color.lerp(scoreColor, Colors.white, 0.8)!,
+                    Color.lerp(scoreColor, Colors.white, 0.6)!,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: scoreColor, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: scoreColor.withOpacity(0.3),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
               child: Column(
                 children: [
-                  const Text(
-                    "Overall Score",
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(height: 6),
                   Text(
-                    "${score.toStringAsFixed(1)}/100",
+                    scoreEmoji,
+                    style: const TextStyle(fontSize: 50),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    "Your Score",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "${score.toStringAsFixed(0)}/100",
                     style: TextStyle(
-                      fontSize: 32,
+                      fontSize: 48,
                       fontWeight: FontWeight.bold,
-                      color: scoreColor,
+                      color: Color.lerp(scoreColor, Colors.black, 0.3),
                     ),
-                  )
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    score >= 80
+                        ? "Excellent! You're amazing! 🎉"
+                        : score >= 60
+                            ? "Good job! Keep practicing! 👏"
+                            : "Keep trying! You'll get it! 💪",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color.lerp(scoreColor, Colors.black, 0.4),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),
 
             const SizedBox(height: 24),
 
-            Text(
-              "Detailed Breakdown",
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-
-            _buildMetric("Accuracy", result.accuracy),
-            _buildMetric("Fluency", result.fluency),
-            _buildMetric("Completeness", result.completeness),
-
-            const Spacer(),
-
-            // Back to Practice button
-            Center(
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Back to Practice"),
+            // Detailed breakdown - simplified for kids
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Text(
+                      "How You Did:",
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildMetric("📝 Accuracy", result.accuracy, Colors.blue),
+                    const SizedBox(height: 12),
+                    _buildMetric("🎯 Fluency", result.fluency, Colors.purple),
+                    const SizedBox(height: 12),
+                    _buildMetric("✅ Completeness", result.completeness, Colors.green),
+                  ],
+                ),
               ),
-            )
+            ),
+
+            const SizedBox(height: 24),
+
+            // Recognized text if available
+            if (result.recognizedText.isNotEmpty) ...[
+              Card(
+                color: Colors.blue.shade50,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        "We heard you say:",
+                        style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        result.recognizedText,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMetric(String label, double value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _buildMetric(String label, double value, Color color) {
+    // Convert Color to MaterialColor for proper shading
+    final MaterialColor materialColor = _toMaterialColor(color);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: materialColor.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: materialColor.shade200, width: 2),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 16)),
           Text(
-            "${value.toStringAsFixed(1)}%",
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            label,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          Text(
+            "${value.toStringAsFixed(0)}%",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: materialColor.shade700,
             ),
-          )
+          ),
         ],
       ),
     );
+  }
+
+  MaterialColor _toMaterialColor(Color color) {
+    if (color is MaterialColor) return color;
+
+    final int colorValue = color.value;
+    return MaterialColor(colorValue, {
+      50: Color.lerp(color, Colors.white, 0.9)!,
+      100: Color.lerp(color, Colors.white, 0.8)!,
+      200: Color.lerp(color, Colors.white, 0.6)!,
+      300: Color.lerp(color, Colors.white, 0.4)!,
+      400: Color.lerp(color, Colors.white, 0.2)!,
+      500: color,
+      600: Color.lerp(color, Colors.black, 0.1)!,
+      700: Color.lerp(color, Colors.black, 0.2)!,
+      800: Color.lerp(color, Colors.black, 0.3)!,
+      900: Color.lerp(color, Colors.black, 0.4)!,
+    });
   }
 }

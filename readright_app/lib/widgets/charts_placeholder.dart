@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Static UI placeholder for progress charts.
-// This provides non-interactive mock charts (bars and line) using simple
+
 class ChartsPlaceholder extends StatelessWidget {
   const ChartsPlaceholder({super.key});
 
@@ -26,16 +25,26 @@ class ChartsPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(12.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Progress (Static Charts)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Progress', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primary)),
+              Text('Last 5 weeks', style: TextStyle(color: Colors.grey[600])),
+            ],
+          ),
           const SizedBox(height: 12),
 
           // Mock bar chart
           Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -60,21 +69,23 @@ class ChartsPlaceholder extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Mock line summary
           Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Score Over Time', style: TextStyle(fontWeight: FontWeight.w600)),
-                  SizedBox(height: 10),
+                children: [
+                  const Text('Score Over Time', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 10),
                   SizedBox(
                     height: 120,
                     child: Center(
-                      child: Text('Line chart placeholder (static image area)', style: TextStyle(color: Colors.black54)),
+                      child: Text('Line chart placeholder (static area)', style: TextStyle(color: Colors.grey[700])),
                     ),
                   ),
                 ],
@@ -88,4 +99,3 @@ class ChartsPlaceholder extends StatelessWidget {
     );
   }
 }
-

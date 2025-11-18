@@ -50,32 +50,100 @@ class _FeedbackPlaceholderState extends State<FeedbackPlaceholder> {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final scorePct = (widget.score * 100).clamp(0.0, 100.0);
+
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Feedback for "${widget.word}"',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          Center(
+            child: Text('Feedback for "${widget.word}"',
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          ),
           const SizedBox(height: 16),
-          Text('Recognized: "${widget.recognized}"',
-              style: const TextStyle(fontSize: 18)),
-          const SizedBox(height: 8),
-          Text('Score: ${(widget.score * 100).toStringAsFixed(1)}%',
-              style: const TextStyle(fontSize: 18, color: Colors.black54)),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _togglePlay,
-            icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
-            label: Text(_isPlaying ? 'Stop Audio' : 'Play Audio'),
+
+          // Recognized and score row
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Recognized', style: TextStyle(fontSize: 14, color: Colors.black54)),
+                            const SizedBox(height: 6),
+                            Text(widget.recognized.isEmpty ? '—' : widget.recognized,
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+
+                      // Score circle
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: primary.withOpacity(0.12),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('${scorePct.toStringAsFixed(0)}%', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primary)),
+                              const SizedBox(height: 2),
+                              const Text('Score', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Playback and action row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _togglePlay,
+                        icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
+                        label: Text(_isPlaying ? 'Stop Audio' : 'Play Audio'),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Back to Practice'),
+                      )
+                    ],
+                  )
+                ],
+              ),
+            ),
           ),
+
           const SizedBox(height: 20),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Back to Practice'),
-          ),
+
+          // Additional teacher-friendly details or placeholders
+          if (widget.score < 60) ...[
+            Text('Tips:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: primary)),
+            const SizedBox(height: 6),
+            const Text('Try breaking the word into sounds, and speak slowly and clearly.', style: TextStyle(fontSize: 14)),
+          ],
         ],
       ),
     );
