@@ -20,11 +20,9 @@ This is what the team implemented so far:
 
 ### Student Experience (Core Screens)
 - `lib/screens/student_home.dart` — Main navigation hub for students, featuring tabs for:
-  - **Words** — word list view  
   - **Practice** — speech recording and local STT comparison  
   - **Feedback** — pronunciation feedback display  
   - **Progress** — chart-based visual progress tracking  
-- `lib/screens/word_list_screen.dart` — Loads Dolch and Phonics seed words from `seed_words.csv` and displays them in list form.  
 - `lib/screens/practice_screen.dart` — Implements mock practice flow (Word → Record → Compare → Feedback). Integrates with `speech_service.dart`.  
 - `lib/screens/feedback_screen.dart` — Displays pronunciation feedback and accuracy placeholders.  
 - `lib/screens/progress_screen.dart` — Shows mock charts and progress summaries using static placeholder data.
@@ -54,11 +52,38 @@ This is what the team implemented so far:
 - UI currently emphasizes static mocks for layout and design iteration before adding backend scoring and analytics.
 
 ---
-
-### UI Placeholders for Front-End Development
+### UI Placeholders and style widgets for Front-End Development
 - `lib/widgets/record_placeholder.dart` — Static microphone recording UI mock used in the Practice screen.  
 - `lib/widgets/feedback_placeholder.dart` — Placeholder showing pronunciation feedback layout.  
-- `lib/widgets/charts_placeholder.dart` — Mock chart visualizations used in the Progress and Student Progress screens.  
+- `lib/widgets/charts_placeholder.dart` — Mock chart visualizations used in the Progress and Student Progress screens.
+- `lib/widgets/mascot_widget.dart` — Wrapper widget for displaying the animated reading-assistant mascot.
+- `lib/widgets/mascot_tiger.dart` — The illustrated tiger mascot used in the student UI.
+- `lib/widgets/animated_mascot.dart` — Animation controller for the mascot’s breathing/movement loop.
+- `lib/widgets/accessibility_button.dart` — Floating accessibility toggle for high-contrast mode and large-text mode.
+
+### Backend Services & Cloud Assessment Components
+These files power the cloud-based pronunciation scoring, fallback logic, and feedback generation.
+Cloud Scoring
+- `lib/services/azure_assessor.dart` — Integrates Azure’s Pronunciation Assessment API:
+Encodes audio
+Sends scoring requests
+Parses accuracy, fluency, completeness, and per-word accuracy
+Uses .env keys for authentication
+lib/services/cloud_fallback_assessor.dart — Local fallback when Azure is unavailable, offline, or errors out.
+
+Assessment Routing
+- `lib/services/cloud_assessment_service.dart` — Determines whether to use Azure or fallback.
+Handles:
+  Connectivity detection
+  Exception handling
+  Unified output via AssessmentResult
+
+Assessment Model
+- `lib/models/assessment_result.dart` — Defines pronunciation scoring results:
+  accuracy, fluency, completeness
+  perWordAccurac
+  overallScore (weighted composite)
+  provider (azure / fallback)
 
 ---
 
@@ -126,3 +151,103 @@ This milestone focused on UI architecture and project organization, setting the 
 Milestone 1 delivered a **functional vertical slice** — from login through a simulated reading practice and progress tracking loop.  
 Students can sign in, practice with Dolch/Phonics words, see mock feedback, and view placeholder progress data.  
 The project now forms the foundation for Milestone 2 features like **cloud pronunciation scoring, CSV exports, and teacher analytics.**
+
+## Milestone 2 – Cloud Scoring, Feedback Grades, Teacher Tools & Accessibility
+
+**Theme**: Cloud Pronunciation Assessment + Feedback Integration + Teacher Utilities + Offline Support
+
+**Objectives Implemented**:
+Cloud Pronunciation Assessment (Azure) : Implemented the full cloud scoring pipeline using Azure’s Pronunciation Assessment API.
+Created the PronunciationAssessor abstraction and the concrete AzurePronunciationAssessor for sending:
+  Base64-encoded audio
+  Reference text
+  Assessment configuration (accuracy, fluency, completeness)
+Added automatic local fallback (cloud_fallback_assessor.dart) for offline or failed cloud requests.
+Introduced CloudAssessmentService to route all scoring through Azure or fallback seamlessly.
+
+**Feedback Screen with Real Cloud-Generated Grades**
+The Feedback screen now displays actual Azure-generated pronunciation scores, including:
+  Accuracy
+  Fluency
+  Completeness
+  Overall weighted score
+If cloud scoring fails, fallback appear automatically to preserve the user experience and make sure it doesn't fail.
+
+**Offline Queue & Sync Mechanism**
+Added a local queue for storing practice attempts when the device is offline.
+Attempts include:
+Word practiced
+Timestamp
+Raw audio
+Score results
+Cloud/fallback indicator
+Queue automatically syncs when network is restored, retrying in order and without duplicates.
+
+**Teacher Dashboard v1** (Structure & Filters)
+Updated the UI of the teacher dashboard to be more visually appealing
+Implemented placeholder data and structures for analytics (to be populated in the next milestone).
+
+
+**Accessibility Improvements**:
+Added accessibility_service.dart and a global accessibility toggle button.
+Introduced:
+  Large-button / large-text mode
+  High-contrast mode
+  Clear visual states for recording, idle, and disabled modes
+  Integrated animated mascot widgets to improve engagement and guide younger readers.
+
+**System Stability Enhancements**:
+Improved async safety and exception handling around audio recording and cloud APIs.
+Refactored speech_service.dart for cleaner recording → scoring → feedback sequencing.
+
+**Outcome**:
+Milestone 2 delivered major functional upgrades: real cloud-powered pronunciation scoring, feedback based on Azure results, reliable offline operation, foundational teacher dashboard structures, and comprehensive accessibility enhancements.
+Two items remain incomplete — CSV export for date ranges and the implemented teacher dashboard, which will be finished before our meeting and before we start Milestone 3.
+
+Future  of Milestone 3: 
+
+**Theme**: Audio Retention + Analytics + Robust Error Handling + Testing
+
+Planned Enhancements:
+**Audio Retention & Teacher Playback**
+  Complete per-student audio retention toggle.
+  Implement secure upload of recorded audio clips to cloud storage (e.g., Firebase Storage).
+  Enable teachers to review and playback student attempts inside the Teacher Dashboard.
+  Add access controls ensuring only authorized teachers can access student recordings.
+
+**Enhanced Progress Analytics**
+  Replace placeholder charts with real, data-driven analytics pulled from synced practice attempts.
+  Add improvement trendlines over time for accuracy, fluency, and completeness.
+  Generate “Most Missed Words” lists to help teachers understand common student difficulties.
+  Integrate analytics with date-range filtering for personalized progress reporting.
+
+**CSV / JSON Export Tools (unfinished from Milestone 2)**
+  Implement export of class or individual student performance data over a chosen date window.
+  Support CSV or JSON formats for compatibility with school reporting systems.
+  Add download buttons and backend formatting utilities.
+
+**Teacher Dashboard Completion (unfinished from Milestone 2)**
+Replace mock data with real synced attempts.
+Add student and class overview with filters (student/list/date).
+
+**Error Handling & Reliability Upgrades**
+  Add robust microphone permission handling:
+  Graceful fallback UI for denied permissions
+  Guided prompts for granting mic access
+  Strengthen network failure detection:
+  Background retry logic
+
+**Testing & Quality Assurance**
+Add at least 5 unit tests for:
+  Cloud scoring functions
+  Fallback logic
+  Parsing Azure assessment results
+  Offline queue management
+  Provider-level state updates
+Add at least 3 widget tests covering:
+  Practice screen recording + feedback flow
+  Feedback screen score rendering
+  Teacher Dashboard filtering and navigation
+  Implement CI linting + static analysis for long-term maintainability.
+
+
