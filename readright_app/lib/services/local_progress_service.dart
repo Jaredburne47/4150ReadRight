@@ -1,9 +1,17 @@
 // lib/services/local_progress_service.dart
 //
-// Handles all local storage for student progress.
+// Handles local storage for mastered words, attempts,
+// and PDF exporting into the Android Downloads folder.
 
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+
 import '../models/attempt_record.dart';
 
 class LocalProgressService {
@@ -11,25 +19,21 @@ class LocalProgressService {
   static const String _keyCurrentList = 'current_list_index';
   static const String _keyAttempts = 'attempt_records';
 
-  // --- TEACHER DASHBOARD DATA --- //
-  // The methods below are the primary way to get data for the teacher dashboard.
+  // ------------------------------------------------------------
+  //                    ATTEMPT LOGGING
+  // ------------------------------------------------------------
 
-  /// Retrieves a complete log of all student attempts.
-  /// Each attempt includes the word, its list, correctness, and timestamp.
-  ///
-  /// Returns a list of [AttemptRecord] objects.
-  Future<List<AttemptRecord>> getAttempts() async {
+  Future<List<AttemptRecord>> getAttempts() => getAllAttempts();
+
+  Future<List<AttemptRecord>> getAllAttempts() async {
     final prefs = await SharedPreferences.getInstance();
     final attemptsJson = prefs.getStringList(_keyAttempts) ?? [];
-    // NOTE: This returns all attempts ever. For the dashboard, you may want
-    // to filter these by date, student, etc., after loading.
+
     return attemptsJson
         .map((json) => AttemptRecord.fromJson(jsonDecode(json)))
         .toList();
   }
 
-  /// Saves a single practice attempt to the persistent log.
-  /// This is called automatically from the PracticeScreen.
   Future<void> saveAttempt(AttemptRecord record) async {
     final prefs = await SharedPreferences.getInstance();
     final attempts = prefs.getStringList(_keyAttempts) ?? [];
@@ -37,8 +41,9 @@ class LocalProgressService {
     await prefs.setStringList(_keyAttempts, attempts);
   }
 
-  // --- STUDENT PROGRESSION DATA --- //
-  // The methods below handle the student's journey through the word lists.
+  // ------------------------------------------------------------
+  //                    MASTERED WORD LOGIC
+  // ------------------------------------------------------------
 
   Future<Set<String>> _loadMasteredSet() async {
     final prefs = await SharedPreferences.getInstance();
@@ -49,13 +54,13 @@ class LocalProgressService {
     if (masteredData is String) {
       try {
         return Set<String>.from(List<String>.from(jsonDecode(masteredData)));
-      } catch (e) {
+      } catch (_) {
         return {};
       }
     }
 
     if (masteredData is List) {
-      return Set<String>.from(masteredData.map((item) => item.toString()));
+      return Set<String>.from(masteredData.map((e) => e.toString()));
     }
 
     return {};
@@ -86,6 +91,10 @@ class LocalProgressService {
     await _saveMasteredSet({});
   }
 
+  // ------------------------------------------------------------
+  //                    LIST PROGRESSION
+  // ------------------------------------------------------------
+
   Future<int> getCurrentListIndex() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_keyCurrentList) ?? 0;
@@ -94,5 +103,97 @@ class LocalProgressService {
   Future<void> setCurrentListIndex(int index) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_keyCurrentList, index);
+  }
+
+  // ------------------------------------------------------------
+  //                       PDF EXPORT
+  // ------------------------------------------------------------
+
+  Future<String> exportAttemptsPDFToAndroidDownloads(
+      DateTime start, DateTime end) async {
+    final df = DateFormat('yyyy-MM-dd HH:mm:ss');
+    final attempts = await getAllAttempts();
+
+    // Filter date range
+    final filtered = attempts.where((a) {
+      return a.timestamp.isAfter(start) && a.timestamp.isBefore(end);
+    }).toList();
+
+    final pdf = pw.Document();
+
+    int total = filtered.length;
+    int correct = filtered.where((a) => a.correct).length;
+    double accuracy = total == 0 ? 0 : (correct / total) * 100;
+
+    // Build the PDF
+    pdf.addPage(
+      pw.MultiPage(
+        build: (context) => [
+          pw.Text(
+            "ReadRight – Student Progress Report",
+            style: pw.TextStyle(
+              fontSize: 22,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text("Date Range: ${df.format(start)} → ${df.format(end)}"),
+          pw.SizedBox(height: 20),
+
+          pw.Text("Attempts:",
+              style: pw.TextStyle(
+                  fontSize: 18, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 8),
+
+          pw.Table.fromTextArray(
+            headers: ["Word", "List", "Correct", "Timestamp"],
+            data: filtered
+                .map((a) => [
+              a.word,
+              a.listName,
+              a.correct ? "Yes" : "No",
+              df.format(a.timestamp)
+            ])
+                .toList(),
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.white,
+            ),
+            headerDecoration: const pw.BoxDecoration(
+              color: PdfColors.blue800,
+            ),
+            cellAlignment: pw.Alignment.centerLeft,
+            cellStyle: const pw.TextStyle(fontSize: 10),
+          ),
+
+          pw.SizedBox(height: 25),
+          pw.Text(
+            "Summary:",
+            style:
+            pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+          ),
+
+          pw.SizedBox(height: 8),
+
+          pw.Text("Total Attempts: $total"),
+          pw.Text("Correct: $correct"),
+          pw.Text("Accuracy: ${accuracy.toStringAsFixed(1)}%"),
+        ],
+      ),
+    );
+
+    // Android Downloads folder
+    final downloadsDir = await getExternalStorageDirectory();
+    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final filename = "attempts_$timestamp.pdf";
+
+    final fullPath =
+        "${downloadsDir!.parent.parent.parent.parent.path}/Download/$filename";
+
+    final file = File(fullPath);
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(await pdf.save());
+
+    return fullPath;
   }
 }
