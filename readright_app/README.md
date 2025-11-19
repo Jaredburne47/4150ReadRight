@@ -32,7 +32,8 @@ This is what the team implemented so far:
 ### Teacher Experience (Core Screens)
 - `lib/screens/teacher_dashboard_screen.dart` — Teacher dashboard providing navigation to manage word lists and review student progress.  
 - `lib/screens/student_progress_screen.dart` — Displays placeholder charts for student performance analytics (to be populated in later milestones).  
-- `lib/screens/manage_word_list_screen.dart` — Mock interface for teachers to edit and manage Dolch/Phonics word lists.  
+- `lib/screens/manage_word_list_screen.dart` — interface for teachers to view Dolch/Phonics word lists and the words in them. They can also upload csv word lists to the app.  
+- `lib/screens/word_list_screen.dart` - screen to view the words and sentences in the word lists.
 - Logout functionality is available from the teacher dashboard, clearing the stored session.
 
 ---
@@ -186,6 +187,8 @@ Queue automatically syncs when network is restored, retrying in order and withou
 **Teacher Dashboard v1** (Structure & Filters)
 Updated the UI of the teacher dashboard to be more visually appealing
 Implemented placeholder data and structures for analytics (to be populated in the next milestone).
+Added ability to export students attempts with date range in a pdf format
+Added screens and ability to view the individual words and sentences in word lists and upload new word lists.
 
 
 **Accessibility Improvements**:
@@ -204,8 +207,7 @@ Refactored speech_service.dart for cleaner recording → scoring → feedback se
 Milestone 2 delivered major functional upgrades: real cloud-powered pronunciation scoring, feedback based on Azure results, reliable offline operation, foundational teacher dashboard structures, and comprehensive accessibility enhancements.
 Two items remain incomplete — CSV export for date ranges and the implemented teacher dashboard, which will be finished before our meeting and before we start Milestone 3.
 
-Future  of Milestone 3: 
-
+Future  of Milestone 3:
 **Theme**: Audio Retention + Analytics + Robust Error Handling + Testing
 
 Planned Enhancements:
