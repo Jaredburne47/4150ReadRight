@@ -1,4 +1,4 @@
-// lib/services/speech_service.dart
+/// lib/services/speech_service.dart
 
 import 'dart:async';
 import 'dart:io';
@@ -23,11 +23,19 @@ class SpeechService {
     return true;
   }
 
+  // ---------------------------------------------------------------------------
+  // RECORD AUDIO → WAV
+  // Azure requires:
+  //  - PCM 16-bit
+  //  - Mono
+  //  - 16kHz sample rate
+  //  - Proper RIFF WAV header
+  // ---------------------------------------------------------------------------
   Future<Uint8List> recordAudio() async {
     final dir = await getTemporaryDirectory();
     final pcmPath = "${dir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.pcm";
-    final wavPath = "${dir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.wav";
 
+    // Start raw PCM recording
     await _recorder.start(
       const RecordConfig(
         encoder: AudioEncoder.pcm16bits,
@@ -37,27 +45,30 @@ class SpeechService {
       path: pcmPath,
     );
 
+    // Record for 3 seconds
     await Future.delayed(const Duration(seconds: 3));
     final result = await _recorder.stop();
 
     if (result == null) return Uint8List(0);
 
-    final pcmFile = File(result);
-    final pcmBytes = await pcmFile.readAsBytes();
+    final pcmData = await File(result).readAsBytes();
 
-    final wavBytes = _pcmToWav(
-      pcmBytes,
+    final wavData = _pcmToWav(
+      pcmData,
       sampleRate: 16000,
       channels: 1,
       bitsPerSample: 16,
     );
 
-    print("📦 PCM SIZE = ${pcmBytes.length}");
-    print("📦 WAV SIZE = ${wavBytes.length}");
+    print("📦 PCM SIZE = ${pcmData.length}");
+    print("📦 WAV SIZE = ${wavData.length}");
 
-    return wavBytes;
+    return wavData;
   }
 
+  // ---------------------------------------------------------------------------
+  // WAV ENCODER — Microsoft-correct format for Azure Speech REST API
+  // ---------------------------------------------------------------------------
   Uint8List _pcmToWav(
       Uint8List pcm, {
         required int sampleRate,
@@ -65,22 +76,27 @@ class SpeechService {
         required int bitsPerSample,
       }) {
     final byteRate = sampleRate * channels * (bitsPerSample ~/ 8);
+    final blockAlign = channels * (bitsPerSample ~/ 8);
 
     final header = BytesBuilder();
+
     header.add(ascii.encode("RIFF"));
     header.add(_i32(36 + pcm.length));
     header.add(ascii.encode("WAVE"));
+
     header.add(ascii.encode("fmt "));
-    header.add(_i32(16));
-    header.add(_i16(1));
+    header.add(_i32(16)); // Subchunk1 size
+    header.add(_i16(1)); // Audio format = PCM
     header.add(_i16(channels));
     header.add(_i32(sampleRate));
     header.add(_i32(byteRate));
-    header.add(_i16(channels * (bitsPerSample ~/ 8)));
+    header.add(_i16(blockAlign));
     header.add(_i16(bitsPerSample));
+
     header.add(ascii.encode("data"));
     header.add(_i32(pcm.length));
     header.add(pcm);
+
     return header.toBytes();
   }
 
@@ -96,34 +112,32 @@ class SpeechService {
     return b;
   }
 
-  // ----------------------------------------------------------
-// TEXT-TO-SPEECH
-// ----------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // TEXT-TO-SPEECH
+  // ---------------------------------------------------------------------------
   Future<void> speak(List<String> lines) async {
-    // Stop any current speech before starting new one
     await _tts.stop();
 
-    Completer<void> completer = Completer();
-
-    _tts.setCompletionHandler(() {
-      if (!completer.isCompleted) {
-        completer.complete();
-      }
-    });
-
     for (final line in lines) {
-      completer = Completer();
+      final completer = Completer<void>();
+
+      _tts.setCompletionHandler(() {
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      });
+
       await _tts.speak(line);
       await completer.future;
-      await Future.delayed(const Duration(milliseconds: 150));
+      await Future.delayed(const Duration(milliseconds: 120));
     }
   }
 
-// ----------------------------------------------------------
-// CLEANUP
-// ----------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // CLEANUP
+  // ---------------------------------------------------------------------------
   Future<void> dispose() async {
-    await _recorder.dispose();
     await _tts.stop();
+    await _recorder.dispose();
   }
 }
