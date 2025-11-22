@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'teacher_student_picker_screen.dart';
 import '../services/auth_service.dart';
 import '../widgets/accessibility_button.dart';
 import 'login_screen.dart';
 import 'manage_word_list_screen.dart';
 import 'student_progress_screen.dart';
+import 'class_management_screen.dart'; // <--- Make sure this import exists
 
 /// Professional dashboard for teachers
 class TeacherDashboardScreen extends StatelessWidget {
@@ -13,6 +14,9 @@ class TeacherDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.read<AuthService>();
+    final teacherId = auth.user?.uid ?? "";
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Teacher Dashboard'),
@@ -22,11 +26,11 @@ class TeacherDashboardScreen extends StatelessWidget {
             tooltip: 'Logout',
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await context.read<AuthService>().logout();
+              await auth.logout();
               if (!context.mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (_) => false,
+                    (_) => false,
               );
             },
           ),
@@ -49,7 +53,7 @@ class TeacherDashboardScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Welcome header
+                // ----- HEADER CARD -----
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -98,14 +102,38 @@ class TeacherDashboardScreen extends StatelessWidget {
 
                 const SizedBox(height: 32),
 
-                // Dashboard actions
+                // ----- QUICK ACTIONS TITLE -----
                 Text(
                   'Quick Actions',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 16),
 
-                // Action cards grid
+                // ======================================================
+                //  ⭐ NEW — MANAGE CLASS ACTION CARD
+                // ======================================================
+                _buildActionCard(
+                  context: context,
+                  icon: Icons.group_add,
+                  title: 'Manage Class',
+                  description: 'Add or import students in your classroom',
+                  color: Colors.orange,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ClassManagementScreen(
+                          teacherId: teacherId,
+                          classId: "default_class",
+                          className: "My Class",
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // ----- STUDENT PROGRESS -----
                 _buildActionCard(
                   context: context,
                   icon: Icons.people,
@@ -115,13 +143,19 @@ class TeacherDashboardScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const StudentProgressScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => TeacherStudentPickerScreen(
+                          teacherId: teacherId,
+                          classId: "default_class",
+                        ),
+                      )
                     );
                   },
                 ),
 
                 const SizedBox(height: 16),
 
+                // ----- MANAGE WORD LISTS -----
                 _buildActionCard(
                   context: context,
                   icon: Icons.list_alt,
@@ -131,13 +165,15 @@ class TeacherDashboardScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const ManageWordListScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const ManageWordListScreen()),
                     );
                   },
                 ),
 
                 const SizedBox(height: 16),
 
+                // ----- ANALYTICS -----
                 _buildActionCard(
                   context: context,
                   icon: Icons.analytics,
@@ -153,7 +189,7 @@ class TeacherDashboardScreen extends StatelessWidget {
 
                 const SizedBox(height: 32),
 
-                // Info section
+                // ----- ABOUT CARD -----
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -194,6 +230,9 @@ class TeacherDashboardScreen extends StatelessWidget {
     );
   }
 
+  // ======================================================
+  //  CARD BUILDER WIDGET
+  // ======================================================
   Widget _buildActionCard({
     required BuildContext context,
     required IconData icon,
@@ -202,7 +241,6 @@ class TeacherDashboardScreen extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    // Convert to MaterialColor for proper shading
     final MaterialColor materialColor = _toMaterialColor(color);
 
     return Card(
@@ -248,7 +286,8 @@ class TeacherDashboardScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, color: Colors.grey.shade400, size: 20),
+              Icon(Icons.arrow_forward_ios,
+                  color: Colors.grey.shade400, size: 20),
             ],
           ),
         ),
@@ -256,11 +295,14 @@ class TeacherDashboardScreen extends StatelessWidget {
     );
   }
 
+  // ======================================================
+  //  COLOR CONVERTER
+  // ======================================================
   MaterialColor _toMaterialColor(Color color) {
     if (color is MaterialColor) return color;
 
-    final int colorValue = color.value;
-    return MaterialColor(colorValue, {
+    final int value = color.value;
+    return MaterialColor(value, {
       50: Color.lerp(color, Colors.white, 0.9)!,
       100: Color.lerp(color, Colors.white, 0.8)!,
       200: Color.lerp(color, Colors.white, 0.6)!,
