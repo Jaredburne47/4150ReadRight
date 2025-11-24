@@ -7,20 +7,22 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/student.dart';
+import '../models/attempt_record.dart';
 
 class StudentSessionService {
-  static const _key = 'current_student';
+  static const _studentKey = 'current_student';
+  static const _attemptsKeyPrefix = 'student_attempts_';
 
   /// Save full student object locally as JSON.
   static Future<void> saveStudent(Student s) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, jsonEncode(s.toJson()));
+    await prefs.setString(_studentKey, jsonEncode(s.toJson()));
   }
 
   /// Load the currently-selected student, or null if none set yet.
   static Future<Student?> loadStudent() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key);
+    final raw = prefs.getString(_studentKey);
     if (raw == null) return null;
     return Student.fromJson(jsonDecode(raw));
   }
@@ -28,6 +30,45 @@ class StudentSessionService {
   /// Clear the active student (e.g., when a teacher logs out or switches).
   static Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_key);
+    await prefs.remove(_studentKey);
+  }
+
+  // --- ATTEMPT RECORD MANAGEMENT ---
+
+  static String _getAttemptsCacheKey(String studentId) =>
+      '$_attemptsKeyPrefix$studentId';
+
+  /// Save a student's reading attempt locally for a specific student.
+  static Future<void> saveAttempt(String studentId, AttemptRecord attempt) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _getAttemptsCacheKey(studentId);
+
+    final existing = await getAttemptsForStudent(studentId);
+    final updated = [attempt, ...existing];
+    updated.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+    final capped = updated.take(5).toList();
+
+    final jsonList = capped.map((a) => a.toJson()).toList();
+    await prefs.setString(key, jsonEncode(jsonList));
+  }
+
+  /// Load attempts from local cache for a specific student.
+  static Future<List<AttemptRecord>> getAttemptsForStudent(String studentId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _getAttemptsCacheKey(studentId);
+    final raw = prefs.getString(key);
+
+    if (raw == null) return [];
+
+    try {
+      final List list = jsonDecode(raw);
+      return list
+          .map((e) => AttemptRecord.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error loading attempts from cache for student $studentId: $e');
+      return [];
+    }
   }
 }

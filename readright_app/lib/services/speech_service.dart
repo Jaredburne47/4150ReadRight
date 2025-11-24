@@ -31,9 +31,15 @@ class SpeechService {
   //  - 16kHz sample rate
   //  - Proper RIFF WAV header
   // ---------------------------------------------------------------------------
-  Future<Uint8List> recordAudio() async {
-    final dir = await getTemporaryDirectory();
-    final pcmPath = "${dir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.pcm";
+  Future<String?> recordAudio({required String studentId}) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final recordingsDir = Directory('${dir.path}/recordings/$studentId');
+    if (!await recordingsDir.exists()) {
+      await recordingsDir.create(recursive: true);
+    }
+    final pcmPath =
+        "${recordingsDir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.pcm";
+    final wavPath = pcmPath.replaceAll('.pcm', '.wav');
 
     // Start raw PCM recording
     await _recorder.start(
@@ -49,9 +55,18 @@ class SpeechService {
     await Future.delayed(const Duration(seconds: 3));
     final result = await _recorder.stop();
 
-    if (result == null) return Uint8List(0);
+    if (result == null) {
+      print('❌ Audio recording failed to stop properly.');
+      return null;
+    }
+    
+    final pcmFile = File(result);
+    if (!await pcmFile.exists()) {
+      print('❌ PCM file not found at path: $result');
+      return null;
+    }
 
-    final pcmData = await File(result).readAsBytes();
+    final pcmData = await pcmFile.readAsBytes();
 
     final wavData = _pcmToWav(
       pcmData,
@@ -59,11 +74,16 @@ class SpeechService {
       channels: 1,
       bitsPerSample: 16,
     );
+    
+    // Save the WAV file
+    final wavFile = File(wavPath);
+    await wavFile.writeAsBytes(wavData);
+    print('✅ Audio saved to: $wavPath');
 
-    print("📦 PCM SIZE = ${pcmData.length}");
-    print("📦 WAV SIZE = ${wavData.length}");
+    // Delete the temporary PCM file
+    await pcmFile.delete();
 
-    return wavData;
+    return wavPath;
   }
 
   // ---------------------------------------------------------------------------
