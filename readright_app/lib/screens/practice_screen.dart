@@ -1,5 +1,6 @@
 // lib/screens/practice_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../models/word_item.dart';
@@ -9,6 +10,7 @@ import '../services/speech_service.dart';
 import '../services/word_list_service.dart';
 import '../services/local_progress_service.dart';
 import '../services/cloud_assessment_service.dart';
+import '../services/student_session_service.dart';
 import '../widgets/mascot_widget.dart';
 import '../widgets/record_placeholder.dart';
 import '../widgets/star_burst.dart';
@@ -133,8 +135,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
     final currentWord = _wordList[_currentIndex];
 
-    final wavBytes = await _speechService.recordAudio();
-    if (wavBytes.isEmpty) {
+    final audioPath = await _speechService.recordAudio(studentId: widget.studentId);
+    if (audioPath == null) {
       setState(() {
         _feedback = 'Recording failed. Try again! 🎤';
         _isRecording = false;
@@ -142,17 +144,17 @@ class _PracticeScreenState extends State<PracticeScreen> {
       return;
     }
 
+    final wavBytes = await File(audioPath).readAsBytes();
+
     final assessment = await _cloud.scoreAttempt(
       expectedWord: currentWord.word,
       recognizedWord: '',
       audioBytes: wavBytes,
     );
 
-    // Use your overall score getter (or compute same way)
-    final score = assessment.score; // or assessment.overallScore
+    final score = assessment.score;
     final isCorrect = score >= 60;
 
-    // 🔹 SAVE FULL SCORING FOR THIS STUDENT
     final attempt = AttemptRecord(
       word: currentWord.word,
       listName: currentWord.category,
@@ -162,8 +164,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
       fluency: assessment.fluency,
       completeness: assessment.completeness,
       recognizedText: assessment.recognizedText,
+      audioPath: audioPath, // Now saving the path
     );
+
+    // Save to both services
     await _progressService.saveAttempt(attempt);
+    await StudentSessionService.saveAttempt(widget.studentId, attempt);
 
     if (isCorrect) {
       setState(() {

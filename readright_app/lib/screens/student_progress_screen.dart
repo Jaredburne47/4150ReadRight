@@ -1,11 +1,11 @@
 // lib/screens/student_progress_screen.dart
-//
-// Allows teachers to select a date range and export a single
-// student's attempts as a PDF.
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:audioplayers/audioplayers.dart'; // Correct audio package
 
+import '../models/attempt_record.dart';
+import '../services/student_session_service.dart';
 import '../services/local_progress_service.dart';
 
 class StudentProgressScreen extends StatefulWidget {
@@ -13,7 +13,7 @@ class StudentProgressScreen extends StatefulWidget {
 
   const StudentProgressScreen({
     super.key,
-    required this.studentId, // <-- must be required for non-nullable String
+    required this.studentId,
   });
 
   @override
@@ -24,14 +24,53 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
   DateTime? _start;
   DateTime? _end;
 
-  late LocalProgressService _progressService; // <-- no initializer here
-  final DateFormat df = DateFormat('yyyy-MM-dd');
+  late LocalProgressService _progressService;
+  final DateFormat _df = DateFormat('yyyy-MM-dd');
+
+  List<AttemptRecord> _recentAttempts = [];
+  bool _isLoading = true;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
-    // now we can access widget.studentId safely
     _progressService = LocalProgressService(studentId: widget.studentId);
+    _loadRecentAttempts();
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadRecentAttempts() async {
+    setState(() => _isLoading = true);
+    final attempts = await StudentSessionService.getAttemptsForStudent(widget.studentId);
+    if (mounted) {
+      setState(() {
+        _recentAttempts = attempts;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _playAudio(String? path) async {
+    if (path == null || path.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No audio recording found for this attempt.')),
+      );
+      return;
+    }
+
+    try {
+      await _audioPlayer.play(DeviceFileSource(path));
+    } catch (e) {
+      print("Error playing audio: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not play audio.')),
+      );
+    }
   }
 
   Future<void> _pickStart() async {
@@ -75,7 +114,6 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
       return;
     }
 
-    // Ensure full-day coverage
     final adjustedEnd = DateTime(
       _end!.year,
       _end!.month,
@@ -115,14 +153,41 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Start date
+            const Text("Recent Attempts", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _recentAttempts.isEmpty
+                ? const Text("No recent attempts found for this student.")
+                : Expanded(
+              child: ListView.builder(
+                itemCount: _recentAttempts.length,
+                itemBuilder: (context, index) {
+                  final attempt = _recentAttempts[index];
+                  return Card(
+                    child: ListTile(
+                      title: Text(attempt.word),
+                      subtitle: Text(DateFormat.yMMMd().add_jms().format(attempt.timestamp)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.play_circle_outline),
+                        onPressed: () => _playAudio(attempt.audioPath),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const Divider(height: 32, thickness: 1),
+            const Text("Export Full History", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
             Row(
               children: [
                 const Text("Start: "),
                 Expanded(
                   child: Text(
-                    _start == null ? "Not set" : df.format(_start!),
+                    _start == null ? "Not set" : _df.format(_start!),
                   ),
                 ),
                 ElevatedButton(
@@ -131,16 +196,13 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: 20),
-
-            // End date
             Row(
               children: [
                 const Text("End: "),
                 Expanded(
                   child: Text(
-                    _end == null ? "Not set" : df.format(_end!),
+                    _end == null ? "Not set" : _df.format(_end!),
                   ),
                 ),
                 ElevatedButton(
@@ -149,14 +211,14 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: 30),
-
-            ElevatedButton.icon(
-              onPressed:
-              (_start != null && _end != null) ? _exportPDF : null,
-              icon: const Icon(Icons.picture_as_pdf),
-              label: const Text("Export PDF to Downloads"),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed:
+                (_start != null && _end != null) ? _exportPDF : null,
+                icon: const Icon(Icons.picture_as_pdf),
+                label: const Text("Export PDF to Downloads"),
+              ),
             ),
           ],
         ),
