@@ -1,28 +1,38 @@
 // lib/screens/student_progress_screen.dart
 //
-// Allows teachers to select a date range and export attempts as a PDF.
+// Allows teachers to select a date range and export a single
+// student's attempts as a PDF.
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../services/local_progress_service.dart';
 
 class StudentProgressScreen extends StatefulWidget {
-  const StudentProgressScreen({super.key});
+  final String studentId;
+
+  const StudentProgressScreen({
+    super.key,
+    required this.studentId, // <-- must be required for non-nullable String
+  });
 
   @override
-  State<StudentProgressScreen> createState() =>
-      _StudentProgressScreenState();
+  State<StudentProgressScreen> createState() => _StudentProgressScreenState();
 }
 
-class _StudentProgressScreenState
-    extends State<StudentProgressScreen> {
+class _StudentProgressScreenState extends State<StudentProgressScreen> {
   DateTime? _start;
   DateTime? _end;
 
-  final LocalProgressService _progressService =
-  LocalProgressService();
+  late LocalProgressService _progressService; // <-- no initializer here
+  final DateFormat df = DateFormat('yyyy-MM-dd');
 
-  final df = DateFormat('yyyy-MM-dd');
+  @override
+  void initState() {
+    super.initState();
+    // now we can access widget.studentId safely
+    _progressService = LocalProgressService(studentId: widget.studentId);
+  }
 
   Future<void> _pickStart() async {
     final picked = await showDatePicker(
@@ -52,12 +62,13 @@ class _StudentProgressScreenState
         context: context,
         builder: (_) => AlertDialog(
           title: const Text("Invalid Date Range"),
-          content: const Text(
-              "End date must be the same or after the start date."),
+          content:
+          const Text("End date must be the same or after the start date."),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("OK"))
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
           ],
         ),
       );
@@ -74,9 +85,8 @@ class _StudentProgressScreenState
       59,
     );
 
-    final path =
-    await _progressService.exportAttemptsPDFToAndroidDownloads(
-        _start!, adjustedEnd);
+    final path = await _progressService
+        .exportAttemptsPDFToAndroidDownloads(_start!, adjustedEnd);
 
     if (!mounted) return;
 
@@ -85,12 +95,14 @@ class _StudentProgressScreenState
       builder: (_) => AlertDialog(
         title: const Text("PDF Export Complete"),
         content: Text(
-            "Your PDF report has been saved to:\n\n$path\n\nOpen your device's 'Download' folder to view it."),
+          "Your PDF report has been saved to:\n\n$path\n\n"
+              "Open your device's 'Download' folder to view it.",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text("OK"),
-          )
+          ),
         ],
       ),
     );
@@ -110,14 +122,13 @@ class _StudentProgressScreenState
                 const Text("Start: "),
                 Expanded(
                   child: Text(
-                    _start == null
-                        ? "Not set"
-                        : df.format(_start!),
+                    _start == null ? "Not set" : df.format(_start!),
                   ),
                 ),
                 ElevatedButton(
-                    onPressed: _pickStart,
-                    child: const Text("Pick Start")),
+                  onPressed: _pickStart,
+                  child: const Text("Pick Start"),
+                ),
               ],
             ),
 
@@ -133,8 +144,9 @@ class _StudentProgressScreenState
                   ),
                 ),
                 ElevatedButton(
-                    onPressed: _pickEnd,
-                    child: const Text("Pick End")),
+                  onPressed: _pickEnd,
+                  child: const Text("Pick End"),
+                ),
               ],
             ),
 

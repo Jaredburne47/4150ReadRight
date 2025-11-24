@@ -1,19 +1,57 @@
+// lib/screens/feedback_screen.dart
+
 import 'package:flutter/material.dart';
-import '../services/cloud_assessment_service.dart';
-import '../models/assessment_result.dart';
+import '../models/attempt_record.dart';
+import '../services/local_progress_service.dart';
 import '../widgets/mascot_widget.dart';
 
-class FeedbackScreen extends StatelessWidget {
-  const FeedbackScreen({super.key});
+class FeedbackScreen extends StatefulWidget {
+  final String studentId;
+  const FeedbackScreen({super.key, required this.studentId});
+
+  @override
+  State<FeedbackScreen> createState() => _FeedbackScreenState();
+}
+
+class _FeedbackScreenState extends State<FeedbackScreen> {
+  AttemptRecord? _latest;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLatest();
+  }
+
+  Future<void> _loadLatest() async {
+    final progress = LocalProgressService(studentId: widget.studentId);
+    final attempts = await progress.getAttempts();
+
+    if (!mounted) return;
+
+    setState(() {
+      _latest = attempts.isNotEmpty ? attempts.last : null;
+      _loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cloud = CloudAssessmentService.instance;
-    final AssessmentResult? result = cloud.lastResult;
-    final String? word = cloud.lastWord;
+    // Loading spinner while we fetch from SharedPreferences
+    if (_loading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.orange.shade400),
+          ),
+        ),
+      );
+    }
 
-    // If no recording has been done yet, show child-friendly placeholder
-    if (result == null || word == null) {
+    final latest = _latest;
+
+    // If no recording has been done yet for THIS student
+    if (latest == null) {
       return Scaffold(
         body: SingleChildScrollView(
           child: ConstrainedBox(
@@ -29,13 +67,15 @@ class FeedbackScreen extends StatelessWidget {
                   children: [
                     const MascotWidget(size: 120, animated: true),
                     const SizedBox(height: 20),
-                    Icon(Icons.emoji_events, size: 60, color: Colors.amber.shade600),
+                    Icon(Icons.emoji_events,
+                        size: 60, color: Colors.amber.shade600),
                     const SizedBox(height: 16),
                     Text(
                       "Great Job!",
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                        color: Colors.orange.shade700,
-                      ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .displayMedium
+                          ?.copyWith(color: Colors.orange.shade700),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -52,9 +92,14 @@ class FeedbackScreen extends StatelessWidget {
       );
     }
 
-    final double score = (result.accuracy * 0.6) +
-        (result.fluency * 0.2) +
-        (result.completeness * 0.2);
+    // Build from AttemptRecord
+    final String word = latest.word;
+    final double accuracy = latest.accuracy;
+    final double fluency = latest.fluency;
+    final double completeness = latest.completeness;
+
+    // Same scoring formula as before
+    final double score = (accuracy * 0.6) + (fluency * 0.2) + (completeness * 0.2);
 
     Color scoreColor;
     String scoreEmoji;
@@ -148,7 +193,8 @@ class FeedbackScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   const Text(
                     "Your Score",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                    style:
+                    TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -164,8 +210,8 @@ class FeedbackScreen extends StatelessWidget {
                     score >= 80
                         ? "Excellent! You're amazing! 🎉"
                         : score >= 60
-                            ? "Good job! Keep practicing! 👏"
-                            : "Keep trying! You'll get it! 💪",
+                        ? "Good job! Keep practicing! 👏"
+                        : "Keep trying! You'll get it! 💪",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -182,7 +228,8 @@ class FeedbackScreen extends StatelessWidget {
             // Detailed breakdown - simplified for kids
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
@@ -192,11 +239,11 @@ class FeedbackScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 16),
-                    _buildMetric("📝 Accuracy", result.accuracy, Colors.blue),
+                    _buildMetric("📝 Accuracy", accuracy, Colors.blue),
                     const SizedBox(height: 12),
-                    _buildMetric("🎯 Fluency", result.fluency, Colors.purple),
+                    _buildMetric("🎯 Fluency", fluency, Colors.purple),
                     const SizedBox(height: 12),
-                    _buildMetric("✅ Completeness", result.completeness, Colors.green),
+                    _buildMetric("✅ Completeness", completeness, Colors.green),
                   ],
                 ),
               ),
@@ -205,21 +252,23 @@ class FeedbackScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Recognized text if available
-            if (result.recognizedText.isNotEmpty) ...[
+            if (latest.recognizedText.isNotEmpty) ...[
               Card(
                 color: Colors.blue.shade50,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
                       Text(
                         "We heard you say:",
-                        style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
+                        style: TextStyle(
+                            fontSize: 16, color: Colors.grey.shade700),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        result.recognizedText,
+                        latest.recognizedText,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -248,12 +297,19 @@ class FeedbackScreen extends StatelessWidget {
         border: Border.all(color: materialColor.shade200, width: 2),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
+          const SizedBox(width: 12),
           Text(
             "${value.toStringAsFixed(0)}%",
             style: TextStyle(

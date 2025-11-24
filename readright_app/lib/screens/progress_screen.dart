@@ -5,7 +5,8 @@ import '../models/attempt_record.dart';
 import '../widgets/mascot_widget.dart';
 
 class ProgressScreen extends StatefulWidget {
-  const ProgressScreen({super.key});
+  final String studentId;
+  const ProgressScreen({super.key, required this.studentId});
 
   @override
   State<ProgressScreen> createState() => _ProgressScreenState();
@@ -19,7 +20,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   @override
   void initState() {
     super.initState();
-    _progressService = LocalProgressService();
+    _progressService = LocalProgressService(studentId: widget.studentId);
     _loadAttempts();
   }
 

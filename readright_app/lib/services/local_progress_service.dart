@@ -1,7 +1,7 @@
 // lib/services/local_progress_service.dart
 //
-// Handles local storage for mastered words, attempts,
-// and PDF exporting into the Android Downloads folder.
+// Handles per-student local storage for mastered words, attempts,
+// list progression, and PDF exporting into the Android Downloads folder.
 
 import 'dart:convert';
 import 'dart:io';
@@ -15,9 +15,14 @@ import 'package:pdf/pdf.dart';
 import '../models/attempt_record.dart';
 
 class LocalProgressService {
-  static const String _keyMasteredWords = 'mastered_words';
-  static const String _keyCurrentList = 'current_list_index';
-  static const String _keyAttempts = 'attempt_records';
+  final String studentId;
+
+  LocalProgressService({required this.studentId});
+
+  // Student-specific keys
+  String get _keyMasteredWords => 'mastered_words_$studentId';
+  String get _keyCurrentList => 'current_list_index_$studentId';
+  String get _keyAttempts => 'attempt_records_$studentId';
 
   // ------------------------------------------------------------
   //                    ATTEMPT LOGGING
@@ -47,28 +52,22 @@ class LocalProgressService {
 
   Future<Set<String>> _loadMasteredSet() async {
     final prefs = await SharedPreferences.getInstance();
-    final dynamic masteredData = prefs.get(_keyMasteredWords);
+    final raw = prefs.getString(_keyMasteredWords);
+    if (raw == null) return {};
 
-    if (masteredData == null) return {};
-
-    if (masteredData is String) {
-      try {
-        return Set<String>.from(List<String>.from(jsonDecode(masteredData)));
-      } catch (_) {
-        return {};
-      }
+    try {
+      return Set<String>.from(jsonDecode(raw));
+    } catch (_) {
+      return {};
     }
-
-    if (masteredData is List) {
-      return Set<String>.from(masteredData.map((e) => e.toString()));
-    }
-
-    return {};
   }
 
   Future<void> _saveMasteredSet(Set<String> mastered) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyMasteredWords, jsonEncode(mastered.toList()));
+    await prefs.setString(
+      _keyMasteredWords,
+      jsonEncode(mastered.toList()),
+    );
   }
 
   Future<bool> isWordMastered(String word) async {
@@ -137,12 +136,13 @@ class LocalProgressService {
             ),
           ),
           pw.SizedBox(height: 8),
+          pw.Text("Student ID: $studentId"),
           pw.Text("Date Range: ${df.format(start)} → ${df.format(end)}"),
           pw.SizedBox(height: 20),
 
           pw.Text("Attempts:",
-              style: pw.TextStyle(
-                  fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              style:
+              pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
 
           pw.Table.fromTextArray(
@@ -185,7 +185,7 @@ class LocalProgressService {
     // Android Downloads folder
     final downloadsDir = await getExternalStorageDirectory();
     final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    final filename = "attempts_$timestamp.pdf";
+    final filename = "attempts_${studentId}_$timestamp.pdf";
 
     final fullPath =
         "${downloadsDir!.parent.parent.parent.parent.path}/Download/$filename";

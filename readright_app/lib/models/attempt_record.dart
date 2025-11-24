@@ -1,7 +1,6 @@
 // lib/models/attempt_record.dart
 // Represents a single student's word attempt.
-//
-// TEACHER DASHBOARD: This model forms the core dataset for student tracking.
+// Now supports full Azure scoring so feedback can show REAL scores.
 
 class AttemptRecord {
   final String word;
@@ -9,11 +8,23 @@ class AttemptRecord {
   final bool correct;
   final DateTime timestamp;
 
+  // NEW — Azure scoring fields
+  final double accuracy;
+  final double fluency;
+  final double completeness;
+  final String recognizedText;
+
   AttemptRecord({
     required this.word,
     required this.listName,
     required this.correct,
     required this.timestamp,
+
+    // Defaults for backward compatibility
+    this.accuracy = 0,
+    this.fluency = 0,
+    this.completeness = 0,
+    this.recognizedText = "",
   });
 
   Map<String, dynamic> toJson() => {
@@ -21,6 +32,12 @@ class AttemptRecord {
     'listName': listName,
     'correct': correct,
     'timestamp': timestamp.toIso8601String(),
+
+    // NEW fields
+    'accuracy': accuracy,
+    'fluency': fluency,
+    'completeness': completeness,
+    'recognizedText': recognizedText,
   };
 
   factory AttemptRecord.fromJson(Map<String, dynamic> json) {
@@ -29,6 +46,12 @@ class AttemptRecord {
       listName: json['listName'],
       correct: json['correct'],
       timestamp: DateTime.parse(json['timestamp']),
+
+      // Handle old records (null → default)
+      accuracy: (json['accuracy'] ?? 0).toDouble(),
+      fluency: (json['fluency'] ?? 0).toDouble(),
+      completeness: (json['completeness'] ?? 0).toDouble(),
+      recognizedText: json['recognizedText'] ?? "",
     );
   }
 }

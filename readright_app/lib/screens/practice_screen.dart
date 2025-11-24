@@ -1,3 +1,5 @@
+// lib/screens/practice_screen.dart
+
 import 'package:flutter/material.dart';
 
 import '../models/word_item.dart';
@@ -12,7 +14,8 @@ import '../widgets/record_placeholder.dart';
 import '../widgets/star_burst.dart';
 
 class PracticeScreen extends StatefulWidget {
-  const PracticeScreen({super.key});
+  final String studentId;
+  const PracticeScreen({super.key, required this.studentId});
 
   @override
   State<PracticeScreen> createState() => _PracticeScreenState();
@@ -48,7 +51,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   Future<void> _initServices() async {
-    _progressService = LocalProgressService();
+    _progressService = LocalProgressService(studentId: widget.studentId);
     _wordListService = WordListService(_progressService);
     _speechService = SpeechService();
 
@@ -92,7 +95,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void _skipWord() {
     if (_isRecording) return;
 
-    int nextIndex = _wordList.indexWhere((w) => !w.mastered, _currentIndex + 1);
+    int nextIndex =
+    _wordList.indexWhere((w) => !w.mastered, _currentIndex + 1);
 
     if (nextIndex == -1) {
       nextIndex = _wordList.indexWhere((w) => !w.mastered);
@@ -144,14 +148,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
       audioBytes: wavBytes,
     );
 
-    final score = assessment.score;
+    // Use your overall score getter (or compute same way)
+    final score = assessment.score; // or assessment.overallScore
     final isCorrect = score >= 60;
 
+    // 🔹 SAVE FULL SCORING FOR THIS STUDENT
     final attempt = AttemptRecord(
       word: currentWord.word,
       listName: currentWord.category,
       correct: isCorrect,
       timestamp: DateTime.now(),
+      accuracy: assessment.accuracy,
+      fluency: assessment.fluency,
+      completeness: assessment.completeness,
+      recognizedText: assessment.recognizedText,
     );
     await _progressService.saveAttempt(attempt);
 
@@ -212,7 +222,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
                   _feedback,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w600),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -231,13 +242,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
             children: [
               const MascotWidget(size: 120, animated: true),
               const SizedBox(height: 24),
-              const Icon(Icons.celebration_rounded, size: 80, color: Colors.amber),
+              const Icon(Icons.celebration_rounded,
+                  size: 80, color: Colors.amber),
               const SizedBox(height: 20),
               Text(
                 '🎉 Amazing Work! 🎉',
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  color: Colors.orange.shade700,
-                ),
+                style: Theme.of(context)
+                    .textTheme
+                    .displayMedium
+                    ?.copyWith(color: Colors.orange.shade700),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -266,12 +279,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
               color: Colors.amber.shade50,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
-                side: BorderSide(color: Colors.orange.shade300, width: 3),
+                side:
+                BorderSide(color: Colors.orange.shade300, width: 3),
               ),
               child: Container(
                 width: double.infinity,
                 constraints: const BoxConstraints(maxWidth: 400),
-                padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 24.0),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 32.0, horizontal: 24.0),
                 child: Column(
                   children: [
                     Text(
@@ -308,20 +323,23 @@ class _PracticeScreenState extends State<PracticeScreen> {
               duration: const Duration(milliseconds: 400),
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 400),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
-                  color: _feedback.contains('Excellent') || _feedback.contains('🌟')
+                  color: _feedback.contains('Excellent') ||
+                      _feedback.contains('🌟')
                       ? Colors.green.shade100
                       : _feedback.contains('Skipped')
-                          ? Colors.blue.shade100
-                          : Colors.orange.shade100,
+                      ? Colors.blue.shade100
+                      : Colors.orange.shade100,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: _feedback.contains('Excellent') || _feedback.contains('🌟')
+                    color: _feedback.contains('Excellent') ||
+                        _feedback.contains('🌟')
                         ? Colors.green.shade300
                         : _feedback.contains('Skipped')
-                            ? Colors.blue.shade300
-                            : Colors.orange.shade300,
+                        ? Colors.blue.shade300
+                        : Colors.orange.shade300,
                     width: 2,
                   ),
                 ),
@@ -330,11 +348,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: _feedback.contains('Excellent') || _feedback.contains('🌟')
+                    color: _feedback.contains('Excellent') ||
+                        _feedback.contains('🌟')
                         ? Colors.green.shade800
                         : _feedback.contains('Skipped')
-                            ? Colors.blue.shade800
-                            : Colors.orange.shade800,
+                        ? Colors.blue.shade800
+                        : Colors.orange.shade800,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -357,11 +376,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
             OutlinedButton.icon(
               onPressed: _isRecording ? null : _skipWord,
               icon: const Icon(Icons.skip_next, size: 24),
-              label: const Text('Skip This Word', style: TextStyle(fontSize: 16)),
+              label: const Text('Skip This Word',
+                  style: TextStyle(fontSize: 16)),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                side: BorderSide(color: Colors.orange.shade300, width: 2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 14),
+                side: BorderSide(
+                    color: Colors.orange.shade300, width: 2),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               ),
             ),
             const SizedBox(height: 20),
