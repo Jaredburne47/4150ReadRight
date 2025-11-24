@@ -7,6 +7,7 @@ class AttemptRecord {
   final String listName;
   final bool correct;
   final DateTime timestamp;
+  final String? audioPath; // Path to the locally stored audio file
 
   // NEW — Azure scoring fields
   final double accuracy;
@@ -19,6 +20,7 @@ class AttemptRecord {
     required this.listName,
     required this.correct,
     required this.timestamp,
+    this.audioPath,
 
     // Defaults for backward compatibility
     this.accuracy = 0,
@@ -32,6 +34,7 @@ class AttemptRecord {
     'listName': listName,
     'correct': correct,
     'timestamp': timestamp.toIso8601String(),
+    'audioPath': audioPath,
 
     // NEW fields
     'accuracy': accuracy,
@@ -46,6 +49,7 @@ class AttemptRecord {
       listName: json['listName'],
       correct: json['correct'],
       timestamp: DateTime.parse(json['timestamp']),
+      audioPath: json['audioPath'],
 
       // Handle old records (null → default)
       accuracy: (json['accuracy'] ?? 0).toDouble(),
