@@ -207,49 +207,48 @@ Refactored speech_service.dart for cleaner recording → scoring → feedback se
 Milestone 2 delivered major functional upgrades: real cloud-powered pronunciation scoring, feedback based on Azure results, reliable offline operation, foundational teacher dashboard structures, and comprehensive accessibility enhancements.
 Two items remain incomplete — CSV export for date ranges and the implemented teacher dashboard, which will be finished before our meeting and before we start Milestone 3.
 
-Future  of Milestone 3:
+## Milestone 3: Audio Retention + Analytics + Robust Error Handling + Testing
 **Theme**: Audio Retention + Analytics + Robust Error Handling + Testing
 
-Planned Enhancements:
+Enhancements:
 **Audio Retention & Teacher Playback**
-  Complete per-student audio retention toggle.
   Implement secure upload of recorded audio clips to cloud storage (e.g., Firebase Storage).
   Enable teachers to review and playback student attempts inside the Teacher Dashboard.
-  Add access controls ensuring only authorized teachers can access student recordings.
 
-**Enhanced Progress Analytics**
+**Enhanced Progress Analytics**(Not done yet will be done by final milestone)
   Replace placeholder charts with real, data-driven analytics pulled from synced practice attempts.
   Add improvement trendlines over time for accuracy, fluency, and completeness.
   Generate “Most Missed Words” lists to help teachers understand common student difficulties.
   Integrate analytics with date-range filtering for personalized progress reporting.
 
-**CSV / JSON Export Tools (unfinished from Milestone 2)**
+**CSV / JSON Export Tools**
   Implement export of class or individual student performance data over a chosen date window.
   Support CSV or JSON formats for compatibility with school reporting systems.
   Add download buttons and backend formatting utilities.
 
-**Teacher Dashboard Completion (unfinished from Milestone 2)**
+**Teacher Dashboard Completion**
 Replace mock data with real synced attempts.
 Add student and class overview with filters (student/list/date).
 
 **Error Handling & Reliability Upgrades**
-  Add robust microphone permission handling:
-  Graceful fallback UI for denied permissions
-  Guided prompts for granting mic access
   Strengthen network failure detection:
   Background retry logic
 
 **Testing & Quality Assurance**
-Add at least 5 unit tests for:
-  Cloud scoring functions
-  Fallback logic
-  Parsing Azure assessment results
-  Offline queue management
-  Provider-level state updates
-Add at least 3 widget tests covering:
+Added 5 unit tests for local progress service, word_list service, attempt_record, and cloud_assessment
+Added at least 3 widget tests covering:
   Practice screen recording + feedback flow
   Feedback screen score rendering
-  Teacher Dashboard filtering and navigation
-  Implement CI linting + static analysis for long-term maintainability.
+  Student Home navigation
+
+## Future Milestone
+For the Final Milestone, we will implement:
+  Enhanced Progress Analytics for the teachers
+  Performance: feedback ≤ 3 s on Wi-Fi.
+  finalized Teacher controls.
+  Documentation pack – Teacher Quick-Start, setup guide, API key handling, data model diagram.
+  Minimum of 10 students and 1 teacher in data store
+  All Doche lists loaded with associated audio files for words and sample sentences
+  Refine the practicing/assessment function so that it is as accurate as possible
 
 
