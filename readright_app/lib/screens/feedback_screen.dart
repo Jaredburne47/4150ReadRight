@@ -53,6 +53,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     // If no recording has been done yet for THIS student
     if (latest == null) {
       return Scaffold(
+        backgroundColor: Colors.orange.shade50,
         body: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -115,6 +116,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.orange.shade50,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(

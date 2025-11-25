@@ -66,9 +66,12 @@ class _StudentHomeState extends State<StudentHome> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Welcome, $name'),
+        backgroundColor: const Color(0xFFFFCC80),
       ),
       body: _screens[_selectedIndex],
+      backgroundColor: Colors.orange.shade50,
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color(0xFFFFCC80),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
