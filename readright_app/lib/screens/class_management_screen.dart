@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/student.dart';
 import '../services/student_repository.dart';
 
@@ -41,6 +40,10 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // ADD STUDENT DIALOG
+  // ---------------------------------------------------------------------------
+
   void _showAddStudentDialog() {
     final nameController = TextEditingController();
     final pinController = TextEditingController();
@@ -49,89 +52,249 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Add Student to ${widget.className}'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Student name',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: pinController,
-                  decoration: const InputDecoration(
-                    labelText: 'PIN (optional, 2–4 digits)',
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Choose an avatar',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: Text('Add Student to ${widget.className}'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _avatarChip('tiger', '🐯', selectedAvatar, (v) {
-                      setState(() => selectedAvatar = v);
-                    }),
-                    _avatarChip('fox', '🦊', selectedAvatar, (v) {
-                      setState(() => selectedAvatar = v);
-                    }),
-                    _avatarChip('bear', '🐻', selectedAvatar, (v) {
-                      setState(() => selectedAvatar = v);
-                    }),
-                    _avatarChip('panda', '🐼', selectedAvatar, (v) {
-                      setState(() => selectedAvatar = v);
-                    }),
-                    _avatarChip('bunny', '🐰', selectedAvatar, (v) {
-                      setState(() => selectedAvatar = v);
-                    }),
-                    _avatarChip('frog', '🐸', selectedAvatar, (v) {
-                      setState(() => selectedAvatar = v);
-                    }),
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Student name',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: pinController,
+                      decoration: const InputDecoration(
+                        labelText: 'PIN (optional, 2–4 digits)',
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Choose an avatar',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        _avatarChip('tiger', '🐯', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('fox', '🦊', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('bear', '🐻', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('panda', '🐼', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('bunny', '🐰', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('frog', '🐸', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isEmpty) return;
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    if (name.isEmpty) return;
 
-                await _repo.addStudent(
-                  teacherId: widget.teacherId,
-                  classId: widget.classId,
-                  name: name,
-                  avatar: selectedAvatar,
-                  pin: pinController.text.trim()
-                );
-                if (!mounted) return;
-                Navigator.pop(context);
-                _refresh();
-              },
-              child: const Text('Add'),
-            ),
-          ],
+                    await _repo.addStudent(
+                      teacherId: widget.teacherId,
+                      classId: widget.classId,
+                      name: name,
+                      avatar: selectedAvatar,
+                      pin: pinController.text.trim(),
+                    );
+
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                    _refresh();
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // EDIT STUDENT DIALOG
+  // ---------------------------------------------------------------------------
+
+  void _showEditStudentDialog(Student student) {
+    final nameController = TextEditingController(text: student.name);
+    final pinController = TextEditingController(text: student.pin ?? '');
+    String selectedAvatar = student.avatar;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: Text('Edit ${student.name}'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Student name',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: pinController,
+                      decoration: const InputDecoration(
+                        labelText: 'PIN (optional, 2–4 digits)',
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Choose an avatar',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        _avatarChip('tiger', '🐯', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('fox', '🦊', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('bear', '🐻', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('panda', '🐼', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('bunny', '🐰', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                        _avatarChip('frog', '🐸', selectedAvatar, (v) {
+                          setModalState(() => selectedAvatar = v);
+                        }),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              actions: [
+                // --- CANCEL ---
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+
+                // --- DELETE STUDENT ---
+                TextButton(
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: Text('Delete ${student.name}?'),
+                        content: const Text(
+                          'This will permanently remove the student from this class.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true) {
+                      await _repo.deleteStudent(
+                        teacherId: widget.teacherId,
+                        classId: widget.classId,
+                        studentId: student.id,
+                      );
+
+                      if (!mounted) return;
+
+                      Navigator.pop(context); // close edit dialog
+                      _refresh();
+                    }
+                  },
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+
+                // --- SAVE ---
+                ElevatedButton(
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    if (name.isEmpty) return;
+
+                    await _repo.updateStudent(
+                      studentId: student.id,
+                      teacherId: widget.teacherId,
+                      classId: widget.classId,
+                      name: name,
+                      avatar: selectedAvatar,
+                      pin: pinController.text.trim(),
+                    );
+
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                    _refresh();
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // IMPORT LIST DIALOG
+  // ---------------------------------------------------------------------------
 
   void _showImportDialog() {
     final textController = TextEditingController();
@@ -145,8 +308,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Paste one student name per line, or paste a simple list.\n'
-                    'Example:\nAlice\nBobby\nChloe\nDaniel',
+                'Paste one student name per line.\nExample:\nAlice\nBobby\nChloe\nDaniel',
               ),
               const SizedBox(height: 12),
               TextField(
@@ -168,11 +330,13 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
               onPressed: () async {
                 final raw = textController.text;
                 final names = raw.split(RegExp(r'\r?\n'));
+
                 await _repo.importStudents(
                   teacherId: widget.teacherId,
                   classId: widget.classId,
                   names: names,
                 );
+
                 if (!mounted) return;
                 Navigator.pop(context);
                 _refresh();
@@ -185,6 +349,10 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // AVATAR CHIP (used for Add + Edit)
+  // ---------------------------------------------------------------------------
+
   Widget _avatarChip(
       String value,
       String emoji,
@@ -192,12 +360,17 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
       void Function(String) onSelected,
       ) {
     final bool isSelected = value == selected;
+
     return ChoiceChip(
       label: Text(emoji),
       selected: isSelected,
       onSelected: (_) => onSelected(value),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // MAIN UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +382,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Top buttons: Add + Import
+            // Add + Import
             Row(
               children: [
                 Expanded(
@@ -230,6 +403,8 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
               ],
             ),
             const SizedBox(height: 16),
+
+            // Student grid
             Expanded(
               child: FutureBuilder<List<Student>>(
                 future: _futureStudents,
@@ -238,28 +413,24 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Error loading students.\nShowing any cached data.',
-                        textAlign: TextAlign.center,
-                      ),
+                    return const Center(
+                      child: Text('Error loading students.'),
                     );
                   }
 
                   final students = snapshot.data ?? [];
+
                   if (students.isEmpty) {
-                    return Center(
+                    return const Center(
                       child: Text(
                         'No students yet.\nUse "Add Student" or "Import List".',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                     );
                   }
 
                   return GridView.builder(
-                    gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
@@ -280,6 +451,10 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Student tile
+  // ---------------------------------------------------------------------------
+
   Widget _buildStudentTile(Student s) {
     final emoji = _emojiForAvatar(s.avatar);
 
@@ -288,9 +463,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
       elevation: 3,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          // Later: go to student's progress, or select for "I’m a student" mode
-        },
+        onTap: () => _showEditStudentDialog(s),  // <-- EDIT ACTION
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -318,13 +491,17 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                     color: Colors.grey.shade600,
                   ),
                 ),
-              ],
+              ]
             ],
           ),
         ),
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Avatar emoji mapping
+  // ---------------------------------------------------------------------------
 
   String _emojiForAvatar(String avatar) {
     switch (avatar) {
