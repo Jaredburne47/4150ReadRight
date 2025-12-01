@@ -124,6 +124,80 @@ class StudentRepository {
     }
   }
 
+  /// Update an existing student (Firestore + cache)
+  Future<void> updateStudent({
+    required String studentId,
+    required String teacherId,
+    required String classId,
+    required String name,
+    required String avatar,
+    required String pin,
+  }) async {
+    final col = _studentsCol(teacherId: teacherId, classId: classId);
+    final safePin = pin.trim();
+
+    // Try to update Firestore (may fail offline)
+    try {
+      await col.doc(studentId).update({
+        'name': name,
+        'avatar': avatar,
+        'pin': safePin,
+      });
+    } catch (_) {
+      // Swallow Firestore error here; cache still updates below.
+    }
+
+    // Update local cache regardless (so offline edits still show up)
+    final existing = await _loadFromCache(classId);
+
+    bool found = false;
+    final updated = existing.map((s) {
+      if (s.id == studentId) {
+        found = true;
+        return s.copyWith(
+          name: name,
+          avatar: avatar,
+          pin: safePin,
+        );
+      }
+      return s;
+    }).toList();
+
+    // If the student wasn't in cache (edge case), add it
+    if (!found) {
+      updated.add(Student(
+        id: studentId,
+        name: name,
+        avatar: avatar,
+        pin: safePin,
+      ));
+    }
+
+    updated.sort((a, b) => a.name.compareTo(b.name));
+    await _saveCache(classId, updated);
+  }
+
+  Future<void> deleteStudent({
+    required String teacherId,
+    required String classId,
+    required String studentId,
+  }) async {
+    final col = _studentsCol(teacherId: teacherId, classId: classId);
+
+    // Try deleting from Firestore (may fail offline)
+    try {
+      await col.doc(studentId).delete();
+    } catch (_) {
+      // ignore, offline mode
+    }
+
+    // Update cache always
+    final existing = await _loadFromCache(classId);
+    final updated = existing.where((s) => s.id != studentId).toList();
+    await _saveCache(classId, updated);
+  }
+
+
   /// Bulk import (students have no PIN by default)
   Future<List<Student>> importStudents({
     required String teacherId,
