@@ -6,7 +6,8 @@ import '../widgets/accessibility_button.dart';
 import 'login_screen.dart';
 import 'manage_word_list_screen.dart';
 import 'student_progress_screen.dart';
-import 'class_management_screen.dart'; // <--- Make sure this import exists
+import 'class_management_screen.dart'; 
+import 'class_analytics_screen.dart';
 
 /// Professional dashboard for teachers
 class TeacherDashboardScreen extends StatelessWidget {
@@ -181,8 +182,15 @@ class TeacherDashboardScreen extends StatelessWidget {
                   description: 'View detailed reports and insights',
                   color: Colors.purple,
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Analytics coming soon!')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ClassAnalyticsScreen(
+                          teacherId: teacherId,
+                          classId: 'default_class',
+                          className: 'My Class',
+                        ),
+                      ),
                     );
                   },
                 ),
