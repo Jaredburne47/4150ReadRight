@@ -7,14 +7,16 @@ receive pronunciation feedback, and track progress.
 ### To run the app 
 There is a .env file that has been turned 
 into Milestone 3 and the Final Milestone, it needs to be
-downloaded and placed in the project root folder(e.g where the yaml is, firebase, etc is)
+downloaded and placed in the project root folder "4150ReadRight/readright_app/" (e.g where the yaml is, firebase, etc is)
 It couldn't be placed in the github due to it containing sensitive azure keys and being apart
 of gitignore.
-After that run flutter pub get and then run it
-When in the app first you need to create a teacher account with an email and password 
-that has a 6 character minimum
-then you can add students in the manage class screen, 
-and then when you go to the student section you can choose the students you created and begin practicing
+You must have an Android emulator running at this point, or it will try to load in Windows or Chrome.
+After that run flutter pub get and then flutter run.
+The app should now build, then boot.
+When you first load the app you need to create a teacher account with an email of this format "name@gmail.com" and password 
+that has at least 6 characters.
+Then you can add students in the manage class screen, 
+and then when you go to the student login, you will select the student you want, then get started practicing!
 
 ## Project status: Team implementation and design notes
 
@@ -263,5 +265,6 @@ For the Final Milestone, we will implement:
   Minimum of 10 students and 1 teacher in data store
   All Doche lists loaded with associated audio files for words and sample sentences
   Refine the practicing/assessment function so that it is as accurate as possible
+
 
 
