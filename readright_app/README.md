@@ -3,6 +3,19 @@
 A mobile app that helps children practice reading words aloud, 
 receive pronunciation feedback, and track progress.
 
+
+### To run the app 
+There is a .env file that has been turned 
+into Milestone 3 and the Final Milestone, it needs to be
+downloaded and placed in the project root folder(e.g where the yaml is, firebase, etc is)
+It couldn't be placed in the github due to it containing sensitive azure keys and being apart
+of gitignore.
+After that run flutter pub get and then run it
+When in the app first you need to create a teacher account with an email and password 
+that has a 6 character minimum
+then you can add students in the manage class screen, 
+and then when you go to the student section you can choose the students you created and begin practicing
+
 ## Project status: Team implementation and design notes
 
 This repository contains the team's implementation of a reading-practice application.
