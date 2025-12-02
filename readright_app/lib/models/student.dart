@@ -12,12 +12,14 @@ class Student {
   final String name;
   final String avatar;   // e.g. "tiger", "fox", etc.
   final String pin;      // optional numeric pin, stored as string ("" = no PIN)
+  final bool isAudioRecordingEnabled;
 
   Student({
     required this.id,
     required this.name,
     required this.avatar,
     required this.pin,
+    this.isAudioRecordingEnabled = false,
   });
 
   // ---------- Firestore helpers ----------
@@ -33,6 +35,7 @@ class Student {
       name: (data['name'] ?? '') as String,
       avatar: (data['avatar'] ?? 'tiger') as String,
       pin: safePin,
+      isAudioRecordingEnabled: (data['isAudioRecordingEnabled'] ?? false) as bool,
     );
   }
 
@@ -40,6 +43,7 @@ class Student {
     'name': name,
     'avatar': avatar,
     'pin': pin,
+    'isAudioRecordingEnabled': isAudioRecordingEnabled,
   };
 
   // ---------- JSON (for local storage) ----------
@@ -53,6 +57,7 @@ class Student {
       name: json['name'] as String? ?? '',
       avatar: json['avatar'] as String? ?? 'tiger',
       pin: safePin,
+      isAudioRecordingEnabled: json['isAudioRecordingEnabled'] as bool? ?? false,
     );
   }
 
@@ -61,6 +66,7 @@ class Student {
     'name': name,
     'avatar': avatar,
     'pin': pin,
+    'isAudioRecordingEnabled': isAudioRecordingEnabled,
   };
 
   String toJsonString() => jsonEncode(toJson());
@@ -76,12 +82,14 @@ class Student {
     String? name,
     String? avatar,
     String? pin,
+    bool? isAudioRecordingEnabled,
   }) {
     return Student(
       id: id ?? this.id,
       name: name ?? this.name,
       avatar: avatar ?? this.avatar,
       pin: pin ?? this.pin,
+      isAudioRecordingEnabled: isAudioRecordingEnabled ?? this.isAudioRecordingEnabled,
     );
   }
 }
