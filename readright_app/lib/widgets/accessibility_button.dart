@@ -11,30 +11,82 @@ class AccessibilityButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final acc = context.watch<AccessibilityService>();
+    final theme = Theme.of(context);
+    final TextStyle itemTextStyle = theme.textTheme.bodyLarge ?? const TextStyle(fontSize: 16);
+    final Color iconReadableColor = theme.colorScheme.onSurface;
 
+    // For students we keep the larger icon and a compact popup (existing behavior)
+    if (isStudentMode) {
+      return PopupMenuButton<int>(
+        tooltip: 'Accessibility Options',
+        icon: Icon(
+          Icons.accessibility_new,
+          size: 32,
+          color: Colors.orange.shade700,
+        ),
+        onSelected: (value) {
+        },
+        itemBuilder: (ctx) => [
+          // Student menu: text size controls only
+          PopupMenuItem(
+            value: 2,
+            child: Row(
+              children: [
+                const Icon(Icons.text_increase, size: 20),
+                const SizedBox(width: 12),
+                Text('Increase Text Size', style: itemTextStyle),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 3,
+            child: Row(
+              children: [
+                const Icon(Icons.text_decrease, size: 20),
+                const SizedBox(width: 12),
+                Text('Decrease Text Size', style: itemTextStyle),
+              ],
+            ),
+          ),
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: 4,
+            child: Row(
+              children: [
+                const Icon(Icons.refresh, size: 20),
+                const SizedBox(width: 12),
+                Text('Reset (' + acc.textScale.toStringAsFixed(1) + 'x)', style: itemTextStyle),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Teacher mode: keep a dropdown menu. High-contrast option removed (UI only per request).
     return PopupMenuButton<int>(
       tooltip: 'Accessibility Options',
       icon: Icon(
         Icons.accessibility_new,
-        size: isStudentMode ? 32 : 24,
-        color: isStudentMode ? Colors.orange.shade700 : null,
+        size: 24,
+        color: iconReadableColor,
       ),
+      // Color-blind mode gives a gentle background to the popup; otherwise default
+      color: acc.colorBlind ? Colors.blue.shade50 : null,
       onSelected: (value) {
         final svc = context.read<AccessibilityService>();
-        if (value == 1) svc.toggleContrast();
-        if (value == 2) svc.increaseText();
-        if (value == 3) svc.decreaseText();
-        if (value == 4) svc.resetTextScale();
+        if (value == 5) svc.toggleColorBlind();
+        // Intentionally do nothing for text-size selections to preserve hard-coded sizes.
       },
       itemBuilder: (ctx) => [
         CheckedPopupMenuItem(
-          value: 1,
-          checked: acc.highContrast,
+          value: 5,
+          checked: acc.colorBlind,
           child: Row(
-            children: const [
-              Icon(Icons.contrast, size: 20),
-              SizedBox(width: 12),
-              Text('High Contrast', style: TextStyle(fontSize: 16)),
+            children: [
+              Icon(Icons.color_lens, size: 20, color: iconReadableColor),
+              const SizedBox(width: 12),
+              Text('Color-blind Mode', style: itemTextStyle.copyWith(color: iconReadableColor)),
             ],
           ),
         ),
@@ -42,20 +94,20 @@ class AccessibilityButton extends StatelessWidget {
         PopupMenuItem(
           value: 2,
           child: Row(
-            children: const [
-              Icon(Icons.text_increase, size: 20),
-              SizedBox(width: 12),
-              Text('Increase Text Size', style: TextStyle(fontSize: 16)),
+            children: [
+              Icon(Icons.text_increase, size: 20, color: iconReadableColor),
+              const SizedBox(width: 12),
+              Text('Increase Text Size', style: itemTextStyle.copyWith(color: iconReadableColor)),
             ],
           ),
         ),
         PopupMenuItem(
           value: 3,
           child: Row(
-            children: const [
-              Icon(Icons.text_decrease, size: 20),
-              SizedBox(width: 12),
-              Text('Decrease Text Size', style: TextStyle(fontSize: 16)),
+            children: [
+              Icon(Icons.text_decrease, size: 20, color: iconReadableColor),
+              const SizedBox(width: 12),
+              Text('Decrease Text Size', style: itemTextStyle.copyWith(color: iconReadableColor)),
             ],
           ),
         ),
@@ -64,12 +116,9 @@ class AccessibilityButton extends StatelessWidget {
           value: 4,
           child: Row(
             children: [
-              const Icon(Icons.refresh, size: 20),
+              Icon(Icons.refresh, size: 20, color: iconReadableColor),
               const SizedBox(width: 12),
-              Text(
-                'Reset (${acc.textScale.toStringAsFixed(1)}x)',
-                style: const TextStyle(fontSize: 16),
-              ),
+              Text('Reset (${acc.textScale.toStringAsFixed(1)}x)', style: itemTextStyle.copyWith(color: iconReadableColor)),
             ],
           ),
         ),

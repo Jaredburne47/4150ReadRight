@@ -64,8 +64,13 @@ class TeacherDashboardScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
+                      // Use theme colors so high-contrast and color-blind modes affect header
                       gradient: LinearGradient(
-                        colors: [Colors.indigo.shade700, Colors.indigo.shade900],
+                        colors: [
+                          Theme.of(context).colorScheme.primary,
+                          // prefer primaryContainer if available for a nice two-tone effect
+                          Theme.of(context).colorScheme.primaryContainer,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -75,25 +80,23 @@ class TeacherDashboardScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          children: const [
-                            Icon(Icons.school, color: Colors.white, size: 32),
-                            SizedBox(width: 12),
+                          children: [
+                            Icon(Icons.school, color: Theme.of(context).colorScheme.onPrimary, size: 32),
+                            const SizedBox(width: 12),
                             Text(
                               'ReadRight',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 28,
+                              style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           'Welcome back! Manage your students and word lists.',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.85),
                           ),
                         ),
                       ],
@@ -209,22 +212,19 @@ class TeacherDashboardScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          children: const [
-                            Icon(Icons.info_outline, color: Colors.indigo),
-                            SizedBox(width: 8),
+                          children: [
+                            Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 8),
                             Text(
                               'About ReadRight',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           'ReadRight helps students practice reading words aloud with real-time feedback and pronunciation assessment.',
-                          style: TextStyle(fontSize: 14, height: 1.5),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.5),
                         ),
                       ],
                     ),
@@ -278,24 +278,18 @@ class TeacherDashboardScreen extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       description,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                     ),
                   ],
                 ),
               ),
               Icon(Icons.arrow_forward_ios,
-                  color: Colors.grey.shade400, size: 20),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), size: 20),
             ],
           ),
         ),

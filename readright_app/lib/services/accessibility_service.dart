@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 class AccessibilityService extends ChangeNotifier {
-  bool highContrast = false;
+  bool colorBlind = false; // color-blind mode flag
   double textScale = 1.0; // 1.0..2.0 for better accessibility
 
-  void toggleContrast() {
-    highContrast = !highContrast;
+  void toggleColorBlind() {
+    colorBlind = !colorBlind;
     notifyListeners();
   }
 
@@ -32,14 +32,12 @@ class AccessibilityService extends ChangeNotifier {
   // Preset for young students (larger by default)
   void setStudentPreset() {
     textScale = 1.2;
-    highContrast = false;
     notifyListeners();
   }
 
   // Preset for teachers (standard)
   void setTeacherPreset() {
     textScale = 1.0;
-    highContrast = false;
     notifyListeners();
   }
 }

@@ -167,9 +167,9 @@ class ReadRightApp extends StatelessWidget {
     );
 
     // -------------------------
-    // TEACHER THEME
+    // TEACHER THEME (base)
     // -------------------------
-    final teacherTheme = ThemeData(
+    final teacherThemeBase = ThemeData(
       colorScheme: ColorScheme.fromSeed(
         seedColor: Colors.indigo,
         primary: Colors.indigo.shade700,
@@ -183,32 +183,46 @@ class ReadRightApp extends StatelessWidget {
         headlineMedium:
         const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
       ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.indigo.shade700,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+      ),
+      scaffoldBackgroundColor: Colors.white,
     );
 
-    final baseTheme = auth.isLoggedIn && auth.role == UserRole.student
+    // -------------------------
+    // APPLY ACCESSIBILITY ADJUSTMENTS (UI only)
+    // -------------------------
+    ThemeData baseTheme = auth.isLoggedIn && auth.role == UserRole.student
         ? studentTheme
-        : teacherTheme;
+        : teacherThemeBase;
 
-    final appliedTheme = accessibility.highContrast
-        ? baseTheme.copyWith(
-      scaffoldBackgroundColor: Colors.black,
-    )
-        : baseTheme;
+    ThemeData appliedTheme = baseTheme;
+
+    // Color-blind mode: shift to a palette that avoids problematic red/green
+    if (accessibility.colorBlind) {
+      final ColorScheme cbScheme = baseTheme.colorScheme.copyWith(
+        primary: Colors.blue.shade800,
+        secondary: Colors.amber.shade700,
+      );
+
+      appliedTheme = baseTheme.copyWith(
+        colorScheme: cbScheme,
+        appBarTheme: baseTheme.appBarTheme.copyWith(
+          backgroundColor: Colors.blue.shade800,
+          foregroundColor: Colors.white,
+        ),
+      );
+    }
+
+    // High-contrast option removed — no additional theme changes here.
 
     return MaterialApp(
       title: "ReadRight",
       debugShowCheckedModeBanner: false,
       theme: appliedTheme,
-      home: Builder(
-        builder: (context) {
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.linear(accessibility.textScale),
-            ),
-            child: home,
-          );
-        },
-      ),
+      home: home,
     );
   }
 }
