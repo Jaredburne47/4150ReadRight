@@ -88,6 +88,7 @@ class StudentRepository {
         'name': name,
         'avatar': avatar,
         'pin': safePin, // NEVER null
+        'isAudioRecordingEnabled': false,
       });
 
       final student = Student(
@@ -132,6 +133,7 @@ class StudentRepository {
     required String name,
     required String avatar,
     required String pin,
+    required bool isAudioRecordingEnabled,
   }) async {
     final col = _studentsCol(teacherId: teacherId, classId: classId);
     final safePin = pin.trim();
@@ -142,6 +144,7 @@ class StudentRepository {
         'name': name,
         'avatar': avatar,
         'pin': safePin,
+        'isAudioRecordingEnabled': isAudioRecordingEnabled,
       });
     } catch (_) {
       // Swallow Firestore error here; cache still updates below.
@@ -158,6 +161,7 @@ class StudentRepository {
           name: name,
           avatar: avatar,
           pin: safePin,
+          isAudioRecordingEnabled: isAudioRecordingEnabled,
         );
       }
       return s;
@@ -170,6 +174,7 @@ class StudentRepository {
         name: name,
         avatar: avatar,
         pin: safePin,
+        isAudioRecordingEnabled: isAudioRecordingEnabled,
       ));
     }
 
