@@ -166,14 +166,17 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
                 itemCount: _recentAttempts.length,
                 itemBuilder: (context, index) {
                   final attempt = _recentAttempts[index];
+                  final hasAudio = attempt.audioPath != null && attempt.audioPath!.isNotEmpty;
                   return Card(
                     child: ListTile(
                       title: Text(attempt.word),
                       subtitle: Text(DateFormat.yMMMd().add_jms().format(attempt.timestamp)),
-                      trailing: IconButton(
+                      trailing: hasAudio
+                          ? IconButton(
                         icon: const Icon(Icons.play_circle_outline),
                         onPressed: () => _playAudio(attempt.audioPath),
-                      ),
+                      )
+                          : const Icon(Icons.mic_off_outlined, color: Colors.grey),
                     ),
                   );
                 },

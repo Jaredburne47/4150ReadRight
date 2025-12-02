@@ -147,8 +147,9 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
 
   void _showEditStudentDialog(Student student) {
     final nameController = TextEditingController(text: student.name);
-    final pinController = TextEditingController(text: student.pin ?? '');
+    final pinController = TextEditingController(text: student.pin);
     String selectedAvatar = student.avatar;
+    bool isAudioEnabled = student.isAudioRecordingEnabled;
 
     showDialog(
       context: context,
@@ -206,6 +207,16 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                           setModalState(() => selectedAvatar = v);
                         }),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      title: const Text('Enable Audio Recording'),
+                      value: isAudioEnabled,
+                      onChanged: (bool value) {
+                        setModalState(() {
+                          isAudioEnabled = value;
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -276,6 +287,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                       name: name,
                       avatar: selectedAvatar,
                       pin: pinController.text.trim(),
+                      isAudioRecordingEnabled: isAudioEnabled,
                     );
 
                     if (!mounted) return;
@@ -329,7 +341,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
             ElevatedButton(
               onPressed: () async {
                 final raw = textController.text;
-                final names = raw.split(RegExp(r'\r?\n'));
+                final names = raw.split('\n');
 
                 await _repo.importStudents(
                   teacherId: widget.teacherId,
@@ -482,7 +494,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (s.pin!.isNotEmpty) ...[
+              if (s.pin.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
                   'PIN: ${s.pin}',

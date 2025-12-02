@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
+import '../models/student.dart';
 import '../models/word_item.dart';
 import '../models/attempt_record.dart';
 
@@ -28,6 +29,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   late WordListService _wordListService;
   late SpeechService _speechService;
   late LocalProgressService _progressService;
+  Student? _student;
 
   final CloudAssessmentService _cloud = CloudAssessmentService.instance;
 
@@ -58,7 +60,17 @@ class _PracticeScreenState extends State<PracticeScreen> {
     _speechService = SpeechService();
 
     await _speechService.initialize();
+    await _loadStudentProfile();
     await _loadWords();
+  }
+
+  Future<void> _loadStudentProfile() async {
+    final student = await StudentSessionService.loadStudent();
+    if (mounted) {
+      setState(() {
+        _student = student;
+      });
+    }
   }
 
   Future<void> _loadWords() async {
@@ -126,7 +138,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   Future<void> _startPractice() async {
-    if (_isRecording) return;
+    if (_isRecording || _student == null) return;
 
     setState(() {
       _isRecording = true;
@@ -155,6 +167,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
     final score = assessment.score;
     final isCorrect = score >= 60;
 
+    final bool shouldRetainAudio = _student!.isAudioRecordingEnabled;
+
     final attempt = AttemptRecord(
       word: currentWord.word,
       listName: currentWord.category,
@@ -164,12 +178,24 @@ class _PracticeScreenState extends State<PracticeScreen> {
       fluency: assessment.fluency,
       completeness: assessment.completeness,
       recognizedText: assessment.recognizedText,
-      audioPath: audioPath, // Now saving the path
+      audioPath: shouldRetainAudio ? audioPath : null,
     );
 
     // Save to both services
     await _progressService.saveAttempt(attempt);
     await StudentSessionService.saveAttempt(widget.studentId, attempt);
+
+    // Clean up audio file if not retained
+    if (!shouldRetainAudio) {
+      try {
+        final file = File(audioPath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (e) {
+        print('Failed to delete non-retained audio file: $e');
+      }
+    }
 
     if (isCorrect) {
       setState(() {
