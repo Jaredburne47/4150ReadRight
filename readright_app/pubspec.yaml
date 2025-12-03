@@ -64,6 +64,12 @@ dev_dependencies:
     sdk: flutter
   mockito: ^5.4.0
   build_runner: ^2.4.6
+  flutter_launcher_icons: ^0.14.0
+
+flutter_icons:
+  android: true        # we care about Android
+  ios: true            # ok to leave, even if you don't use iOS
+  image_path: "lib/assets/tigericon.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
